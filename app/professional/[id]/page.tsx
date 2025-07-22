@@ -52,7 +52,7 @@ export default function ProfessionalProfile() {
                 <div className="flex flex-col md:flex-row gap-6">
                   <div className="flex-shrink-0">
                     <Avatar className="w-32 h-32">
-                      <AvatarImage src="/placeholder.svg?height=128&width=128" alt="Dra. María González" />
+                      <AvatarImage src="/images/therapy-session.jpg" alt="Dra. María González" />
                       <AvatarFallback>MG</AvatarFallback>
                     </Avatar>
                   </div>

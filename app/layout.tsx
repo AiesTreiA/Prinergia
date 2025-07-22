@@ -1,20 +1,26 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type React from "react"
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: "Prinergia - Conecta con tu Bienestar Interior",
+  description:
+    "Plataforma que conecta terapeutas, coaches, profesores de yoga y facilitadores de biodanza con personas que buscan bienestar emocional y corporal.",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="es">
+      <head></head>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

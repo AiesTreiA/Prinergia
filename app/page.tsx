@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Heart, MapPin, MessageCircle, Calendar, Users, Leaf } from "lucide-react"
+import { MapPin, MessageCircle, Calendar, Leaf } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -37,8 +37,18 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto text-center">
+      <section className="relative py-20 px-4 overflow-hidden">
+        {/* Background Images */}
+        <div className="absolute inset-0 z-0">
+          <div className="grid grid-cols-2 md:grid-cols-4 h-full opacity-10">
+            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/yoga-beach.jpg)" }}></div>
+            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/sound-therapy.jpg)" }}></div>
+            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/biodanza.jpg)" }}></div>
+            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/therapy-session.jpg)" }}></div>
+          </div>
+        </div>
+
+        <div className="container mx-auto text-center relative z-10">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-800 mb-6">
             Conecta con tu
             <span className="text-green-600 block">Bienestar Interior</span>
@@ -53,26 +63,30 @@ export default function HomePage() {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-2 shadow-md">
-                <Heart className="h-8 w-8 text-pink-500" />
+              <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
+                <img
+                  src="/images/therapy-session.jpg"
+                  alt="Terapia"
+                  className="w-full h-full object-cover rounded-full"
+                />
               </div>
               <span className="text-sm text-gray-600">Terapia</span>
             </div>
             <div className="text-center">
-              <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-2 shadow-md">
-                <Users className="h-8 w-8 text-blue-500" />
+              <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
+                <img src="/images/biodanza.jpg" alt="Coaching" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Coaching</span>
             </div>
             <div className="text-center">
-              <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-2 shadow-md">
-                <Leaf className="h-8 w-8 text-green-500" />
+              <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
+                <img src="/images/yoga-beach.jpg" alt="Yoga" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Yoga</span>
             </div>
             <div className="text-center">
-              <div className="bg-white rounded-full p-4 w-16 h-16 mx-auto mb-2 shadow-md">
-                <MessageCircle className="h-8 w-8 text-purple-500" />
+              <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
+                <img src="/images/acro-yoga.jpg" alt="Biodanza" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Biodanza</span>
             </div>

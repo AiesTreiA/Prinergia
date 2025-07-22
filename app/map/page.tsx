@@ -7,8 +7,9 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Star, Filter, Navigation, ArrowLeft, Leaf, Search } from "lucide-react"
+import { MapPin, Star, Filter, ArrowLeft, Leaf, Search } from "lucide-react"
 import Link from "next/link"
+import InteractiveMap from "./interactive-map"
 
 const mapLocations = [
   {
@@ -19,7 +20,7 @@ const mapLocations = [
     rating: 4.9,
     price: "$800",
     coordinates: { lat: 19.4326, lng: -99.1332 },
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/images/therapy-session.jpg",
     type: "individual",
   },
   {
@@ -30,7 +31,7 @@ const mapLocations = [
     rating: 4.7,
     price: "$500-900",
     coordinates: { lat: 19.415, lng: -99.162 },
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/images/sound-therapy.jpg",
     type: "center",
   },
   {
@@ -41,7 +42,7 @@ const mapLocations = [
     rating: 4.8,
     price: "$300",
     coordinates: { lat: 19.411, lng: -99.171 },
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/images/acro-yoga.jpg",
     type: "group",
   },
   {
@@ -52,7 +53,7 @@ const mapLocations = [
     rating: 4.9,
     price: "$400",
     coordinates: { lat: 19.412, lng: -99.168 },
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/images/yoga-beach.jpg",
     type: "center",
   },
   {
@@ -63,7 +64,7 @@ const mapLocations = [
     rating: 4.8,
     price: "$600",
     coordinates: { lat: 19.414, lng: -99.165 },
-    avatar: "/placeholder.svg?height=40&width=40",
+    avatar: "/images/biodanza.jpg",
     type: "individual",
   },
 ]
@@ -133,39 +134,11 @@ export default function MapPage() {
           <div className="lg:col-span-2">
             <Card className="h-[600px]">
               <CardContent className="p-0 h-full">
-                <div className="relative h-full bg-gradient-to-br from-green-100 to-blue-100 rounded-lg flex items-center justify-center">
-                  {/* Placeholder for interactive map */}
-                  <div className="text-center">
-                    <MapPin className="h-16 w-16 text-green-600 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Mapa Interactivo</h3>
-                    <p className="text-gray-600 mb-4">
-                      Aquí se mostraría un mapa interactivo con las ubicaciones de los profesionales
-                    </p>
-                    <div className="grid grid-cols-2 gap-4 max-w-md mx-auto">
-                      {filteredLocations.slice(0, 4).map((location) => (
-                        <div
-                          key={location.id}
-                          className={`p-2 bg-white rounded-lg shadow-sm border cursor-pointer transition-all ${
-                            selectedLocation === location.id ? "ring-2 ring-green-600" : "hover:shadow-md"
-                          }`}
-                          onClick={() => setSelectedLocation(location.id)}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                            <span className="text-xs font-medium truncate">{location.name}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Map Controls */}
-                  <div className="absolute top-4 right-4 space-y-2">
-                    <Button size="sm" variant="secondary" className="bg-white shadow-md">
-                      <Navigation className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
+                <InteractiveMap
+                  locations={filteredLocations}
+                  selectedLocation={selectedLocation}
+                  onLocationSelect={setSelectedLocation}
+                />
               </CardContent>
             </Card>
           </div>
