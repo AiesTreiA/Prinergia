@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Leaf, Upload, Plus, X } from "lucide-react"
 import Link from "next/link"
+import { LoginButton } from "@/components/auth/login-button"
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1)
@@ -55,11 +56,7 @@ export default function RegisterPage() {
               <span className="text-xl font-bold text-green-800">Prinergia</span>
             </Link>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              ¿Ya tienes cuenta?
-            </Button>
-          </div>
+          <LoginButton />
         </div>
       </header>
 

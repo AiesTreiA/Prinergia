@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { MapPin, MessageCircle, Calendar, Leaf } from "lucide-react"
 import Link from "next/link"
+import { LoginButton } from "@/components/auth/login-button"
 
 export default function HomePage() {
   return (
@@ -25,14 +26,7 @@ export default function HomePage() {
               Soy Profesional
             </Link>
           </nav>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              Iniciar Sesión
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Registrarse
-            </Button>
-          </div>
+          <LoginButton />
         </div>
       </header>
 

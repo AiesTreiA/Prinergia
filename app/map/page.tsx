@@ -9,7 +9,8 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { MapPin, Star, Filter, ArrowLeft, Leaf, Search } from "lucide-react"
 import Link from "next/link"
-import InteractiveMap from "./interactive-map"
+import MapboxMap from "./mapbox-map"
+import { LoginButton } from "@/components/auth/login-button"
 
 const mapLocations = [
   {
@@ -87,14 +88,7 @@ export default function MapPage() {
               <span className="text-xl font-bold text-green-800">Prinergia</span>
             </Link>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              Iniciar Sesión
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Registrarse
-            </Button>
-          </div>
+          <LoginButton />
         </div>
       </header>
 
@@ -134,7 +128,7 @@ export default function MapPage() {
           <div className="lg:col-span-2">
             <Card className="h-[600px]">
               <CardContent className="p-0 h-full">
-                <InteractiveMap
+                <MapboxMap
                   locations={filteredLocations}
                   selectedLocation={selectedLocation}
                   onLocationSelect={setSelectedLocation}
@@ -164,7 +158,7 @@ export default function MapPage() {
                 <Card
                   key={location.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedLocation === location.id ? "ring-2 ring-green-600" : ""
+                    selectedLocation === location.id ? "ring-2 ring-green-600 bg-green-50" : ""
                   }`}
                   onClick={() => setSelectedLocation(location.id)}
                 >

@@ -17,6 +17,7 @@ import {
   CheckCircle,
 } from "lucide-react"
 import Link from "next/link"
+import { LoginButton } from "@/components/auth/login-button"
 
 export default function ProfessionalProfile() {
   return (
@@ -31,14 +32,7 @@ export default function ProfessionalProfile() {
               <span className="text-xl font-bold text-green-800">Prinergia</span>
             </Link>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              Iniciar Sesión
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Registrarse
-            </Button>
-          </div>
+          <LoginButton />
         </div>
       </header>
 

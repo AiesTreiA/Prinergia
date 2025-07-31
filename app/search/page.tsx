@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Star, MapPin, Clock, Filter, Leaf, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { LoginButton } from "@/components/auth/login-button"
 
 const professionals = [
   {
@@ -71,14 +72,7 @@ export default function SearchPage() {
               <span className="text-xl font-bold text-green-800">Prinergia</span>
             </Link>
           </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              Iniciar Sesión
-            </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Registrarse
-            </Button>
-          </div>
+          <LoginButton />
         </div>
       </header>
 
