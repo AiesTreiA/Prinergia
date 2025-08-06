@@ -4,12 +4,11 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Calendar, Loader2, ArrowLeft, Leaf } from "lucide-react"
+import { User, Mail, Calendar, Loader2, ArrowLeft, Leaf } from 'lucide-react'
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
 import { supabase } from "@/lib/supabase"
 import { useMockAuth } from "@/lib/mock-auth"
-import { isV0Environment } from "@/lib/auth-config"
 // No importar useSession directamente aquí
 
 interface UserProfile {
@@ -29,11 +28,18 @@ export default function UserProfilePage() {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const isV0 = isV0Environment()
+  const [isV0, setIsV0] = useState(false) // Inicializar como false, se actualizará en useEffect
 
   // Cargar dinámicamente useSession para el entorno de producción
   useEffect(() => {
-    if (!isV0) {
+    const currentIsV0 =
+      typeof window !== "undefined" &&
+      (window.location.hostname.includes("v0.dev") ||
+        window.location.hostname.includes("vercel.app") ||
+        window.location.hostname.includes("localhost"))
+    setIsV0(currentIsV0)
+
+    if (!currentIsV0) {
       const loadNextAuthSessionHook = async () => {
         try {
           const { useSession: importedUseSession } = await import("next-auth/react")
@@ -48,7 +54,7 @@ export default function UserProfilePage() {
     } else {
       setNextAuthLoading(false) // No se carga NextAuth si estamos en v0
     }
-  }, [isV0])
+  }, [])
 
   // Usar el hook useSession cargado dinámicamente
   useEffect(() => {
@@ -68,8 +74,7 @@ export default function UserProfilePage() {
       let userName: string | undefined = undefined
       let userImage: string | undefined = undefined
 
-      if (isV0) {
-        // En v0, usamos el usuario del mock auth
+      if (isV0) { // `isV0` ya es el estado actualizado
         userEmail = mockAuth.user?.email
         userName = mockAuth.user?.name
         userImage = mockAuth.user?.image
