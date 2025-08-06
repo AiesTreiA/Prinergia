@@ -10,7 +10,7 @@ import { LoginButton } from "@/components/auth/login-button"
 import { supabase } from "@/lib/supabase"
 import { useMockAuth } from "@/lib/mock-auth"
 import { isV0Environment } from "@/lib/auth-config"
-import { useSession } from "next-auth/react"
+// No importar useSession directamente aquí
 
 interface UserProfile {
   id: string
@@ -22,11 +22,42 @@ interface UserProfile {
 
 export default function UserProfilePage() {
   const mockAuth = useMockAuth()
-  const { data: session } = useSession()
+  const [nextAuthUseSession, setNextAuthUseSession] = useState<any>(null)
+  const [session, setSession] = useState<any>(null) // Para almacenar los datos de la sesión de NextAuth
+  const [nextAuthLoading, setNextAuthLoading] = useState(true) // Estado de carga para la sesión de NextAuth
+
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const isV0 = isV0Environment()
+
+  // Cargar dinámicamente useSession para el entorno de producción
+  useEffect(() => {
+    if (!isV0) {
+      const loadNextAuthSessionHook = async () => {
+        try {
+          const { useSession: importedUseSession } = await import("next-auth/react")
+          setNextAuthUseSession(() => importedUseSession)
+        } catch (e) {
+          console.warn("NextAuth useSession no está disponible en este entorno.", e)
+        } finally {
+          setNextAuthLoading(false)
+        }
+      }
+      loadNextAuthSessionHook()
+    } else {
+      setNextAuthLoading(false) // No se carga NextAuth si estamos en v0
+    }
+  }, [isV0])
+
+  // Usar el hook useSession cargado dinámicamente
+  useEffect(() => {
+    if (!isV0 && nextAuthUseSession) {
+      // Aquí es donde se llama el hook, condicionalmente
+      const { data: nextAuthSessionData } = nextAuthUseSession()
+      setSession(nextAuthSessionData)
+    }
+  }, [isV0, nextAuthUseSession]) // Se ejecuta cuando nextAuthUseSession está disponible
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -34,13 +65,23 @@ export default function UserProfilePage() {
       setError(null)
 
       let userEmail: string | undefined = undefined
+      let userName: string | undefined = undefined
+      let userImage: string | undefined = undefined
 
       if (isV0) {
         // En v0, usamos el usuario del mock auth
         userEmail = mockAuth.user?.email
+        userName = mockAuth.user?.name
+        userImage = mockAuth.user?.image
       } else {
-        // En producción, intentamos obtener la sesión de NextAuth
+        // En producción, esperamos a que la sesión de NextAuth cargue
+        if (nextAuthLoading) {
+          setLoading(true)
+          return // Esperar a que la sesión de NextAuth termine de cargar
+        }
         userEmail = session?.user?.email
+        userName = session?.user?.name
+        userImage = session?.user?.image
       }
 
       if (!userEmail) {
@@ -56,31 +97,49 @@ export default function UserProfilePage() {
       }
 
       try {
-        const { data, error } = await supabase.from("users").select("*").eq("email", userEmail).single()
+        const { data, error: dbError } = await supabase.from("users").select("*").eq("email", userEmail).single()
 
-        if (error) {
-          console.error("Error fetching user profile:", error)
-          setError(`Error al cargar el perfil: ${error.message}`)
+        if (dbError) {
+          console.error("Error fetching user profile from DB:", dbError)
+          setError(`Error al cargar el perfil: ${dbError.message}`)
+          // Si el usuario no se encuentra (código PGRST116), intentar insertarlo
+          if (dbError.code === "PGRST116" && userName) {
+            console.log("Usuario no encontrado en DB, intentando crear nuevo usuario.")
+            const { data: newUser, error: insertError } = await supabase
+              .from("users")
+              .insert({
+                email: userEmail,
+                name: userName,
+                avatar_url: userImage,
+              })
+              .select()
+              .single()
+            if (insertError) {
+              console.error("Error inserting new user:", insertError)
+              setError(`Error al crear el perfil: ${insertError.message}`)
+            } else if (newUser) {
+              setUserProfile(newUser)
+              setError(null) // Limpiar error si el usuario fue creado exitosamente
+            }
+          }
         } else if (data) {
           setUserProfile(data)
         } else {
-          // Si no se encuentra el usuario en la DB, podemos crear uno o mostrar un mensaje
           setError("Perfil de usuario no encontrado en la base de datos.")
-          // Opcional: Crear el usuario si no existe
-          // const { data: newUser, error: insertError } = await supabase.from('users').insert({ email: userEmail, name: mockAuth.user?.name || 'Nuevo Usuario' }).select().single();
-          // if (insertError) console.error("Error inserting new user:", insertError);
-          // else setUserProfile(newUser);
         }
       } catch (e: any) {
-        console.error("Unexpected error fetching user profile:", e)
+        console.error("Error inesperado al obtener el perfil de usuario:", e)
         setError(`Error inesperado: ${e.message}`)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchUserProfile()
-  }, [mockAuth.user, isV0, session]) // Dependencias para re-ejecutar el efecto
+    // Solo obtener el perfil si la sesión de NextAuth ha terminado de cargar (o si estamos en v0)
+    if (isV0 || !nextAuthLoading) {
+      fetchUserProfile()
+    }
+  }, [mockAuth.user, isV0, session, nextAuthLoading, nextAuthUseSession]) // Dependencias para re-ejecutar el efecto
 
   return (
     <div className="min-h-screen bg-gray-50">
