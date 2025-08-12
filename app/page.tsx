@@ -14,8 +14,8 @@ export default function HomePage() {
   const images = [
     {
       src: "/images/therapy-session.jpg",
-      backgroundSize: "80% auto", // Reducido para mostrar piernas completas
-      backgroundPosition: "center 40%", // Ajustado para mostrar más del cuerpo
+      backgroundSize: "cover", // Cambiado a cover para mejor ajuste
+      backgroundPosition: "center center", // Centrado perfecto
       containerTransform: "scale(1) rotate(0deg)",
       useGradientOverlay: true,
     },
@@ -28,9 +28,9 @@ export default function HomePage() {
     },
     {
       src: "/images/yoga-beach.jpg",
-      backgroundSize: "140% auto", // Reducido significativamente para mostrar piernas completas
-      backgroundPosition: "center 35%", // Ajustado para mostrar más del cuerpo
-      containerTransform: "scale(1) rotate(-15deg)",
+      backgroundSize: "140% auto",
+      backgroundPosition: "center 35%",
+      containerTransform: "scale(1) rotate(0deg)", // Cambiado de rotate(-15deg) a rotate(0deg)
       useGradientOverlay: false,
     },
     {
@@ -99,20 +99,13 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
-        {/* Background Images con transformación aplicada al contenedor completo */}
-        <div
-          className="absolute inset-0 z-0"
-          style={{
-            transform: currentImage.containerTransform,
-            transformOrigin: "center center",
-          }}
-        >
+        {/* Background Images - Contenedor simplificado */}
+        <div className="absolute inset-0 z-0">
           <div
             className={`h-full w-full transition-all duration-700 ease-in-out ${
               isTransitioning ? "opacity-0 scale-110 blur-sm" : "opacity-20 scale-100 blur-0"
             }`}
             style={{
-              // Using individual background properties instead of shorthand
               backgroundImage: `
                 ${
                   currentImage.useGradientOverlay
@@ -133,19 +126,16 @@ export default function HomePage() {
               backgroundSize: currentImage.backgroundSize,
               backgroundPosition: currentImage.backgroundPosition,
               backgroundRepeat: "no-repeat",
+              transform: currentImage.containerTransform,
+              transformOrigin: "center center",
               filter: isTransitioning
                 ? "hue-rotate(15deg) brightness(1.1)"
                 : currentImage.useGradientOverlay
                   ? "brightness(1.15) contrast(0.95) saturate(1.1)"
                   : "hue-rotate(0deg)",
-              // Contenedor expandido para evitar bordes vacíos durante la rotación
-              width: "150%",
-              height: "150%",
-              left: "-25%",
-              top: "-25%",
             }}
           >
-            {/* Overlay con patrón de geometría sagrada - más suave para terapia */}
+            {/* Overlay con patrón de geometría sagrada */}
             <div
               className={`absolute inset-0 transition-opacity duration-700 ${
                 isTransitioning ? "opacity-30" : currentImage.useGradientOverlay ? "opacity-5" : "opacity-10"
@@ -223,12 +213,7 @@ export default function HomePage() {
             </Link>
             <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
-                <img
-                  src="/images/yoga-beach.jpg"
-                  alt="Yoga"
-                  className="w-full h-full object-cover rounded-full"
-                  style={{ transform: "rotate(-15deg)" }}
-                />
+                <img src="/images/yoga-beach.jpg" alt="Yoga" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Yoga</span>
             </Link>
