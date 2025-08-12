@@ -12,44 +12,37 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { User, Settings, LogOut, Calendar, MessageCircle } from "lucide-react"
 import { useMockAuth } from "@/lib/mock-auth"
+import { isV0Environment } from "@/lib/auth-utils"
 import React from "react"
+import Link from "next/link"
 
 export function LoginButton() {
-  // Siempre llamar el mock auth hook
   const mockAuth = useMockAuth()
   const [nextAuthData, setNextAuthData] = React.useState<any>(null)
-  const [isProduction, setIsProduction] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(true)
+  const isV0 = isV0Environment()
 
   React.useEffect(() => {
-    // Detectar entorno
-    const isV0 =
-      typeof window !== "undefined" &&
-      (window.location.hostname.includes("v0.dev") ||
-        window.location.hostname.includes("vercel.app") ||
-        window.location.hostname.includes("localhost"))
-
-    setIsProduction(!isV0)
-
-    // Solo cargar NextAuth en producción
+    // Solo cargar NextAuth si NO estamos en v0
     if (!isV0) {
       const loadNextAuth = async () => {
         try {
           const { useSession, signIn, signOut } = await import("next-auth/react")
           setNextAuthData({ useSession, signIn, signOut })
         } catch (error) {
-          console.warn("NextAuth not available")
+          console.warn("NextAuth not available:", error)
+        } finally {
+          setIsLoading(false)
         }
-        setIsLoading(false)
       }
       loadNextAuth()
     } else {
       setIsLoading(false)
     }
-  }, [])
+  }, [isV0])
 
-  // En v0, usar mock auth
-  if (!isProduction) {
+  // En v0, usar solo mock auth
+  if (isV0) {
     const { user, isLoading: mockLoading, signIn, signOut } = mockAuth
 
     if (mockLoading) {
@@ -81,17 +74,21 @@ export function LoginButton() {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="mr-2 h-4 w-4" />
-              <span>Mi Perfil</span>
+            <DropdownMenuItem asChild>
+              <Link href="/profile">
+                <User className="mr-2 h-4 w-4" />
+                <span>Mi Perfil</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Calendar className="mr-2 h-4 w-4" />
               <span>Mis Citas</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <MessageCircle className="mr-2 h-4 w-4" />
-              <span>Mensajes</span>
+            <DropdownMenuItem asChild>
+              <Link href="/messages">
+                <MessageCircle className="mr-2 h-4 w-4" />
+                <span>Mensajes</span>
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem>
               <Settings className="mr-2 h-4 w-4" />
@@ -165,17 +162,21 @@ function ProductionLoginButton({ nextAuthData }: { nextAuthData: any }) {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <User className="mr-2 h-4 w-4" />
-            <span>Mi Perfil</span>
+          <DropdownMenuItem asChild>
+            <Link href="/profile">
+              <User className="mr-2 h-4 w-4" />
+              <span>Mi Perfil</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Calendar className="mr-2 h-4 w-4" />
             <span>Mis Citas</span>
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <MessageCircle className="mr-2 h-4 w-4" />
-            <span>Mensajes</span>
+          <DropdownMenuItem asChild>
+            <Link href="/messages">
+              <MessageCircle className="mr-2 h-4 w-4" />
+              <span>Mensajes</span>
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
             <Settings className="mr-2 h-4 w-4" />

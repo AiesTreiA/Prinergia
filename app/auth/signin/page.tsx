@@ -7,30 +7,46 @@ import Link from "next/link"
 import { useMockAuth } from "@/lib/mock-auth"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { isV0Environment } from "@/lib/auth-utils"
+import { useSession } from "next-auth/react"
 
 export default function SignInPage() {
   const router = useRouter()
   const mockAuth = useMockAuth()
-  const [isV0, setIsV0] = useState(true)
+  const [nextAuthSession, setNextAuthSession] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const isV0 = isV0Environment()
+  const { data: nextAuthSessionData, status } = useSession()
 
   useEffect(() => {
-    // Detectar entorno
-    const isV0Environment =
-      typeof window !== "undefined" &&
-      (window.location.hostname.includes("v0.dev") ||
-        window.location.hostname.includes("vercel.app") ||
-        window.location.hostname.includes("localhost"))
+    // Solo cargar NextAuth si NO estamos en v0
+    if (!isV0) {
+      setNextAuthSession({ useSession })
+    } else {
+      setIsLoading(false)
+    }
+  }, [isV0])
 
-    setIsV0(isV0Environment)
-
-    // Solo redirigir en v0 si hay usuario mock
-    if (isV0Environment && mockAuth.user) {
+  useEffect(() => {
+    // Redirigir si ya está autenticado
+    if (isV0 && mockAuth.user) {
+      router.push("/")
+    } else if (!isV0 && nextAuthSessionData) {
       router.push("/")
     }
-  }, [mockAuth.user, router])
+  }, [mockAuth.user, nextAuthSessionData, isV0, router])
 
-  if (isV0 && mockAuth.user) {
-    return null // Redirigiendo...
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
+
+  // Si ya está autenticado, no mostrar nada (redirigiendo)
+  if ((isV0 && mockAuth.user) || (!isV0 && nextAuthSessionData)) {
+    return null
   }
 
   return (

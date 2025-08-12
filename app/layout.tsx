@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Prinergia - Conecta con tu Bienestar Interior",
   description:
     "Plataforma que conecta terapeutas, coaches, profesores de yoga y facilitadores de biodanza con personas que buscan bienestar emocional y corporal.",
-    generator: 'v0.dev'
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

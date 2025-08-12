@@ -4,12 +4,14 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Calendar, Loader2, ArrowLeft, Leaf } from 'lucide-react'
+import { User, Mail, Calendar, Loader2, ArrowLeft, Leaf } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
 import { supabase } from "@/lib/supabase"
 import { useMockAuth } from "@/lib/mock-auth"
-// No importar useSession directamente aquí
+import { useRouter } from "next/navigation"
+import { isV0Environment } from "@/lib/auth-utils"
+import { useSession } from "next-auth/react"
 
 interface UserProfile {
   id: string
@@ -21,49 +23,20 @@ interface UserProfile {
 
 export default function UserProfilePage() {
   const mockAuth = useMockAuth()
-  const [nextAuthUseSession, setNextAuthUseSession] = useState<any>(null)
-  const [session, setSession] = useState<any>(null) // Para almacenar los datos de la sesión de NextAuth
-  const [nextAuthLoading, setNextAuthLoading] = useState(true) // Estado de carga para la sesión de NextAuth
-
+  const router = useRouter()
+  const [nextAuthSession, setNextAuthSession] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isV0, setIsV0] = useState(false) // Inicializar como false, se actualizará en useEffect
+  const isV0 = isV0Environment()
+  const nextAuthSessionData = useSession()
 
-  // Cargar dinámicamente useSession para el entorno de producción
   useEffect(() => {
-    const currentIsV0 =
-      typeof window !== "undefined" &&
-      (window.location.hostname.includes("v0.dev") ||
-        window.location.hostname.includes("vercel.app") ||
-        window.location.hostname.includes("localhost"))
-    setIsV0(currentIsV0)
-
-    if (!currentIsV0) {
-      const loadNextAuthSessionHook = async () => {
-        try {
-          const { useSession: importedUseSession } = await import("next-auth/react")
-          setNextAuthUseSession(() => importedUseSession)
-        } catch (e) {
-          console.warn("NextAuth useSession no está disponible en este entorno.", e)
-        } finally {
-          setNextAuthLoading(false)
-        }
-      }
-      loadNextAuthSessionHook()
-    } else {
-      setNextAuthLoading(false) // No se carga NextAuth si estamos en v0
+    // Solo cargar NextAuth si NO estamos en v0
+    if (!isV0) {
+      setNextAuthSession({ useSession })
     }
-  }, [])
-
-  // Usar el hook useSession cargado dinámicamente
-  useEffect(() => {
-    if (!isV0 && nextAuthUseSession) {
-      // Aquí es donde se llama el hook, condicionalmente
-      const { data: nextAuthSessionData } = nextAuthUseSession()
-      setSession(nextAuthSessionData)
-    }
-  }, [isV0, nextAuthUseSession]) // Se ejecuta cuando nextAuthUseSession está disponible
+  }, [isV0])
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -73,20 +46,37 @@ export default function UserProfilePage() {
       let userEmail: string | undefined = undefined
       let userName: string | undefined = undefined
       let userImage: string | undefined = undefined
+      let isAuthenticated = false
 
-      if (isV0) { // `isV0` ya es el estado actualizado
+      if (isV0) {
         userEmail = mockAuth.user?.email
         userName = mockAuth.user?.name
         userImage = mockAuth.user?.image
+        isAuthenticated = !!mockAuth.user
       } else {
-        // En producción, esperamos a que la sesión de NextAuth cargue
-        if (nextAuthLoading) {
-          setLoading(true)
-          return // Esperar a que la sesión de NextAuth termine de cargar
+        if (nextAuthSessionData.status === "loading") {
+          return // Esperar a que cargue
         }
-        userEmail = session?.user?.email
-        userName = session?.user?.name
-        userImage = session?.user?.image
+        if (nextAuthSessionData.status === "unauthenticated") {
+          router.push("/auth/signin")
+          return
+        }
+        userEmail = nextAuthSessionData.data?.user?.email
+        userName = nextAuthSessionData.data?.user?.name
+        userImage = nextAuthSessionData.data?.user?.image
+        isAuthenticated = !!nextAuthSessionData.data
+      }
+
+      if (!isAuthenticated) {
+        if (isV0) {
+          // En v0, no redirigir automáticamente
+          setError("No hay sesión activa. Inicia sesión para ver tu perfil.")
+        } else {
+          router.push("/auth/signin")
+          return
+        }
+        setLoading(false)
+        return
       }
 
       if (!userEmail) {
@@ -106,10 +96,10 @@ export default function UserProfilePage() {
 
         if (dbError) {
           console.error("Error fetching user profile from DB:", dbError)
-          setError(`Error al cargar el perfil: ${dbError.message}`)
-          // Si el usuario no se encuentra (código PGRST116), intentar insertarlo
+
+          // Si el usuario no existe, crearlo
           if (dbError.code === "PGRST116" && userName) {
-            console.log("Usuario no encontrado en DB, intentando crear nuevo usuario.")
+            console.log("Usuario no encontrado en DB, creando nuevo usuario.")
             const { data: newUser, error: insertError } = await supabase
               .from("users")
               .insert({
@@ -119,13 +109,16 @@ export default function UserProfilePage() {
               })
               .select()
               .single()
+
             if (insertError) {
               console.error("Error inserting new user:", insertError)
               setError(`Error al crear el perfil: ${insertError.message}`)
             } else if (newUser) {
               setUserProfile(newUser)
-              setError(null) // Limpiar error si el usuario fue creado exitosamente
+              setError(null)
             }
+          } else {
+            setError(`Error al cargar el perfil: ${dbError.message}`)
           }
         } else if (data) {
           setUserProfile(data)
@@ -140,11 +133,16 @@ export default function UserProfilePage() {
       }
     }
 
-    // Solo obtener el perfil si la sesión de NextAuth ha terminado de cargar (o si estamos en v0)
-    if (isV0 || !nextAuthLoading) {
-      fetchUserProfile()
-    }
-  }, [mockAuth.user, isV0, session, nextAuthLoading, nextAuthUseSession]) // Dependencias para re-ejecutar el efecto
+    fetchUserProfile()
+  }, [mockAuth.user, nextAuthSessionData.data, nextAuthSessionData.status, isV0, router])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-green-600" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -166,35 +164,37 @@ export default function UserProfilePage() {
         <div className="max-w-2xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Mi Perfil</h1>
 
-          {loading && (
-            <Card className="flex items-center justify-center p-8">
-              <Loader2 className="h-8 w-8 animate-spin text-green-600" />
-              <span className="ml-3 text-gray-600">Cargando perfil...</span>
-            </Card>
-          )}
-
           {error && (
-            <Card className="p-6 bg-red-50 border border-red-200 text-red-700">
+            <Card className="p-6 bg-red-50 border border-red-200 text-red-700 mb-6">
               <CardTitle className="text-lg font-semibold mb-2">Error al cargar el perfil</CardTitle>
               <CardDescription>{error}</CardDescription>
-              <p className="mt-4 text-sm">
-                Asegúrate de haber iniciado sesión y de que las variables de entorno de Supabase estén configuradas
-                correctamente.
-              </p>
+              {isV0 && (
+                <div className="mt-4">
+                  <Button onClick={() => mockAuth.signIn("google")} className="bg-green-600 hover:bg-green-700">
+                    Iniciar Sesión Demo
+                  </Button>
+                </div>
+              )}
             </Card>
           )}
 
-          {!loading && !error && userProfile && (
+          {!error && userProfile && (
             <Card>
               <CardContent className="p-6 flex flex-col items-center text-center">
                 <Avatar className="w-24 h-24 mb-4">
                   <AvatarImage
-                    src={userProfile.avatar_url || "/placeholder.svg?height=96&width=96&text=User"}
+                    src={
+                      userProfile.avatar_url ||
+                      (isV0 ? mockAuth.user?.image : nextAuthSessionData.data?.user?.image) ||
+                      "/placeholder.svg?height=96&width=96&text=User"
+                    }
                     alt={userProfile.name || "User Avatar"}
                   />
                   <AvatarFallback>{userProfile.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">{userProfile.name || "Usuario Desconocido"}</h2>
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  {userProfile.name || (isV0 ? mockAuth.user?.name : nextAuthSessionData.data?.user?.name) || "Usuario"}
+                </h2>
                 <p className="text-gray-600 flex items-center gap-2 mb-4">
                   <Mail className="h-4 w-4" />
                   {userProfile.email}
@@ -218,18 +218,13 @@ export default function UserProfilePage() {
             </Card>
           )}
 
-          {!loading && !error && !userProfile && (
+          {!error && !userProfile && (
             <Card className="p-6 text-center">
-              <CardTitle className="text-lg font-semibold mb-2">No se encontró el perfil</CardTitle>
-              <CardDescription>Parece que no tienes un perfil de usuario en nuestra base de datos.</CardDescription>
-              <Button
-                className="mt-4 bg-green-600 hover:bg-green-700"
-                onClick={() => {
-                  /* Lógica para crear perfil */
-                }}
-              >
-                Crear mi perfil
-              </Button>
+              <CardTitle className="text-lg font-semibold mb-2">Creando tu perfil...</CardTitle>
+              <CardDescription>Estamos configurando tu cuenta por primera vez.</CardDescription>
+              <div className="mt-4">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-green-600" />
+              </div>
             </Card>
           )}
         </div>

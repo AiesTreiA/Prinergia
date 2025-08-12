@@ -1,3 +1,6 @@
+"use client"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -6,6 +9,64 @@ import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
 
 export default function HomePage() {
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [isTransitioning, setIsTransitioning] = useState(false)
+
+  const images = [
+    {
+      src: "/images/therapy-session.jpg",
+      backgroundSize: "120% auto", // Zoom para mostrar la persona completa
+      backgroundPosition: "center 60%", // Posición ajustada para mostrar la persona que recibe el masaje
+      containerTransform: "scale(1) rotate(0deg)",
+      useGradientOverlay: true, // Activar overlay suave para terapia
+    },
+    {
+      src: "/images/biodanza.jpg",
+      backgroundSize: "cover",
+      backgroundPosition: "center center",
+      containerTransform: "scale(1) rotate(0deg)",
+      useGradientOverlay: false,
+    },
+    {
+      src: "/images/yoga-beach.jpg",
+      backgroundSize: "220% auto", // Zoom aumentado para ver brazos y tren superior completo
+      backgroundPosition: "center 25%", // Posición más alta para mostrar brazos, cabeza y técnica de alineación
+      containerTransform: "scale(1) rotate(-15deg)", // Rotación hacia el otro lado (más negativa)
+      useGradientOverlay: false,
+    },
+    {
+      src: "/images/acro-yoga.jpg",
+      backgroundSize: "cover",
+      backgroundPosition: "center center",
+      containerTransform: "scale(1) rotate(0deg)",
+      useGradientOverlay: false,
+    },
+  ]
+
+  useEffect(() => {
+    // Seleccionar imagen inicial aleatoria
+    setCurrentImageIndex(Math.floor(Math.random() * images.length))
+
+    const interval = setInterval(() => {
+      // Iniciar transición de salida
+      setIsTransitioning(true)
+
+      setTimeout(() => {
+        // Cambiar imagen después de 0.7s
+        setCurrentImageIndex((prevIndex) => (prevIndex + 1) % images.length)
+
+        setTimeout(() => {
+          // Terminar transición de entrada después de otros 0.7s
+          setIsTransitioning(false)
+        }, 700)
+      }, 700)
+    }, 5000) // Cambiar cada 5 segundos
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const currentImage = images[currentImageIndex]
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50">
       {/* Header */}
@@ -32,13 +93,93 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 overflow-hidden">
-        {/* Background Images */}
-        <div className="absolute inset-0 z-0">
-          <div className="grid grid-cols-2 md:grid-cols-4 h-full opacity-10">
-            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/yoga-beach.jpg)" }}></div>
-            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/sound-therapy.jpg)" }}></div>
-            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/biodanza.jpg)" }}></div>
-            <div className="bg-cover bg-center" style={{ backgroundImage: "url(/images/therapy-session.jpg)" }}></div>
+        {/* Background Images con transformación aplicada al contenedor completo */}
+        <div
+          className="absolute inset-0 z-0"
+          style={{
+            transform: currentImage.containerTransform,
+            transformOrigin: "center center",
+          }}
+        >
+          <div
+            className={`h-full w-full transition-all duration-700 ease-in-out ${
+              isTransitioning ? "opacity-0 scale-110 blur-sm" : "opacity-20 scale-100 blur-0"
+            }`}
+            style={{
+              // Using individual background properties instead of shorthand
+              backgroundImage: `
+                ${
+                  currentImage.useGradientOverlay
+                    ? `
+                  radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 30%, transparent 70%),
+                  radial-gradient(circle at 20% 80%, rgba(34, 197, 94, 0.08) 0%, transparent 40%),
+                  radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                  linear-gradient(135deg, rgba(168, 85, 247, 0.03) 0%, transparent 50%),
+                `
+                    : `
+                  radial-gradient(circle at 30% 70%, rgba(34, 197, 94, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(168, 85, 247, 0.05) 0%, transparent 50%),
+                `
+                }
+                url(${currentImage.src})
+              `,
+              backgroundSize: currentImage.backgroundSize,
+              backgroundPosition: currentImage.backgroundPosition,
+              backgroundRepeat: "no-repeat",
+              filter: isTransitioning
+                ? "hue-rotate(15deg) brightness(1.1)"
+                : currentImage.useGradientOverlay
+                  ? "brightness(1.15) contrast(0.95) saturate(1.1)"
+                  : "hue-rotate(0deg)",
+              // Contenedor expandido para evitar bordes vacíos durante la rotación
+              width: "150%",
+              height: "150%",
+              left: "-25%",
+              top: "-25%",
+            }}
+          >
+            {/* Overlay con patrón de geometría sagrada - más suave para terapia */}
+            <div
+              className={`absolute inset-0 transition-opacity duration-700 ${
+                isTransitioning ? "opacity-30" : currentImage.useGradientOverlay ? "opacity-5" : "opacity-10"
+              }`}
+              style={{
+                backgroundImage: currentImage.useGradientOverlay
+                  ? `
+                  radial-gradient(circle at 25% 25%, transparent 25%, rgba(34, 197, 94, 0.03) 26%, rgba(34, 197, 94, 0.03) 30%, transparent 31%),
+                  radial-gradient(circle at 75% 75%, transparent 25%, rgba(59, 130, 246, 0.03) 26%, rgba(59, 130, 246, 0.03) 30%, transparent 31%),
+                  radial-gradient(circle at 50% 50%, transparent 35%, rgba(168, 85, 247, 0.02) 36%, rgba(168, 85, 247, 0.02) 40%, transparent 41%),
+                  linear-gradient(45deg, rgba(255, 255, 255, 0.02) 0%, transparent 25%, rgba(255, 255, 255, 0.01) 50%, transparent 75%, rgba(255, 255, 255, 0.02) 100%)
+                `
+                  : `
+                  radial-gradient(circle at 25% 25%, transparent 20%, rgba(34, 197, 94, 0.1) 21%, rgba(34, 197, 94, 0.1) 25%, transparent 26%),
+                  radial-gradient(circle at 75% 75%, transparent 20%, rgba(59, 130, 246, 0.1) 21%, rgba(59, 130, 246, 0.1) 25%, transparent 26%),
+                  radial-gradient(circle at 50% 50%, transparent 30%, rgba(168, 85, 247, 0.05) 31%, rgba(168, 85, 247, 0.05) 35%, transparent 36%)
+                `,
+                backgroundSize: currentImage.useGradientOverlay
+                  ? "300px 300px, 400px 400px, 250px 250px, 100% 100%"
+                  : "200px 200px, 300px 300px, 150px 150px",
+                backgroundRepeat: "repeat",
+                animation: isTransitioning ? "none" : "sacred-geometry 25s linear infinite",
+              }}
+            />
+
+            {/* Degradé adicional para suavizar bordes en imagen de terapia */}
+            {currentImage.useGradientOverlay && (
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: `
+                    radial-gradient(ellipse 120% 80% at center, transparent 40%, rgba(255, 255, 255, 0.1) 70%, rgba(255, 255, 255, 0.2) 100%),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, transparent 20%, transparent 80%, rgba(255, 255, 255, 0.05) 100%),
+                    linear-gradient(to right, rgba(255, 255, 255, 0.03) 0%, transparent 15%, transparent 85%, rgba(255, 255, 255, 0.03) 100%)
+                  `,
+                  opacity: isTransitioning ? 0.3 : 0.6,
+                  transition: "opacity 700ms ease-in-out",
+                }}
+              />
+            )}
           </div>
         </div>
 
@@ -74,7 +215,12 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
-                <img src="/images/yoga-beach.jpg" alt="Yoga" className="w-full h-full object-cover rounded-full" />
+                <img
+                  src="/images/yoga-beach.jpg"
+                  alt="Yoga"
+                  className="w-full h-full object-cover rounded-full"
+                  style={{ transform: "rotate(-15deg)" }}
+                />
               </div>
               <span className="text-sm text-gray-600">Yoga</span>
             </div>
@@ -84,6 +230,23 @@ export default function HomePage() {
               </div>
               <span className="text-sm text-gray-600">Biodanza</span>
             </div>
+          </div>
+        </div>
+
+        {/* Indicadores de progreso inspirados en geometría sagrada */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
+          <div className="flex space-x-3">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`w-3 h-3 rounded-full transition-all duration-700 ${
+                  index === currentImageIndex ? "bg-green-600 scale-125 shadow-lg" : "bg-white/50 scale-100"
+                } ${isTransitioning && index === currentImageIndex ? "animate-pulse" : ""}`}
+                style={{
+                  clipPath: index === currentImageIndex ? "polygon(50% 0%, 0% 100%, 100% 100%)" : "circle(50%)",
+                }}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -235,6 +398,16 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      <style jsx global>{`
+        @keyframes sacred-geometry {
+          0% { transform: rotate(0deg) scale(1); }
+          25% { transform: rotate(90deg) scale(1.05); }
+          50% { transform: rotate(180deg) scale(1); }
+          75% { transform: rotate(270deg) scale(1.05); }
+          100% { transform: rotate(360deg) scale(1); }
+        }
+      `}</style>
     </div>
   )
 }
