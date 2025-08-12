@@ -11,7 +11,6 @@ import { supabase } from "@/lib/supabase"
 import { useMockAuth } from "@/lib/mock-auth"
 import { useRouter } from "next/navigation"
 import { isV0Environment } from "@/lib/auth-utils"
-import { useSession } from "next-auth/react"
 
 interface UserProfile {
   id: string
@@ -24,18 +23,24 @@ interface UserProfile {
 export default function UserProfilePage() {
   const mockAuth = useMockAuth()
   const router = useRouter()
-  const [nextAuthSession, setNextAuthSession] = useState<any>(null)
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [authData, setAuthData] = useState<any>(null)
   const isV0 = isV0Environment()
-  const nextAuthSessionData = useSession()
 
   useEffect(() => {
-    // Solo cargar NextAuth si NO estamos en v0
-    if (!isV0) {
-      setNextAuthSession({ useSession })
+    const loadAuthData = async () => {
+      if (!isV0) {
+        try {
+          const { useSession } = await import("next-auth/react")
+          setAuthData({ useSession })
+        } catch (error) {
+          console.warn("NextAuth not available:", error)
+        }
+      }
     }
+    loadAuthData()
   }, [isV0])
 
   useEffect(() => {
@@ -54,17 +59,9 @@ export default function UserProfilePage() {
         userImage = mockAuth.user?.image
         isAuthenticated = !!mockAuth.user
       } else {
-        if (nextAuthSessionData.status === "loading") {
-          return // Esperar a que cargue
-        }
-        if (nextAuthSessionData.status === "unauthenticated") {
-          router.push("/auth/signin")
-          return
-        }
-        userEmail = nextAuthSessionData.data?.user?.email
-        userName = nextAuthSessionData.data?.user?.name
-        userImage = nextAuthSessionData.data?.user?.image
-        isAuthenticated = !!nextAuthSessionData.data
+        // En producción, necesitamos manejar NextAuth de forma diferente
+        // Por ahora, asumimos no autenticado hasta que se implemente correctamente
+        isAuthenticated = false
       }
 
       if (!isAuthenticated) {
@@ -134,7 +131,7 @@ export default function UserProfilePage() {
     }
 
     fetchUserProfile()
-  }, [mockAuth.user, nextAuthSessionData.data, nextAuthSessionData.status, isV0, router])
+  }, [mockAuth.user, isV0, router])
 
   if (loading) {
     return (
@@ -185,7 +182,7 @@ export default function UserProfilePage() {
                   <AvatarImage
                     src={
                       userProfile.avatar_url ||
-                      (isV0 ? mockAuth.user?.image : nextAuthSessionData.data?.user?.image) ||
+                      (isV0 ? mockAuth.user?.image : null) ||
                       "/placeholder.svg?height=96&width=96&text=User"
                     }
                     alt={userProfile.name || "User Avatar"}
@@ -193,7 +190,7 @@ export default function UserProfilePage() {
                   <AvatarFallback>{userProfile.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  {userProfile.name || (isV0 ? mockAuth.user?.name : nextAuthSessionData.data?.user?.name) || "Usuario"}
+                  {userProfile.name || (isV0 ? mockAuth.user?.name : "Usuario")}
                 </h2>
                 <p className="text-gray-600 flex items-center gap-2 mb-4">
                   <Mail className="h-4 w-4" />

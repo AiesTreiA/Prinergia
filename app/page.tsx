@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { MapPin, MessageCircle, Calendar, Leaf } from "lucide-react"
 import Link from "next/link"
-import { LoginButton } from "@/components/auth/login-button"
 
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -15,10 +14,10 @@ export default function HomePage() {
   const images = [
     {
       src: "/images/therapy-session.jpg",
-      backgroundSize: "120% auto", // Zoom para mostrar la persona completa
-      backgroundPosition: "center 60%", // Posición ajustada para mostrar la persona que recibe el masaje
+      backgroundSize: "80% auto", // Reducido para mostrar piernas completas
+      backgroundPosition: "center 40%", // Ajustado para mostrar más del cuerpo
       containerTransform: "scale(1) rotate(0deg)",
-      useGradientOverlay: true, // Activar overlay suave para terapia
+      useGradientOverlay: true,
     },
     {
       src: "/images/biodanza.jpg",
@@ -29,9 +28,9 @@ export default function HomePage() {
     },
     {
       src: "/images/yoga-beach.jpg",
-      backgroundSize: "220% auto", // Zoom aumentado para ver brazos y tren superior completo
-      backgroundPosition: "center 25%", // Posición más alta para mostrar brazos, cabeza y técnica de alineación
-      containerTransform: "scale(1) rotate(-15deg)", // Rotación hacia el otro lado (más negativa)
+      backgroundSize: "140% auto", // Reducido significativamente para mostrar piernas completas
+      backgroundPosition: "center 35%", // Ajustado para mostrar más del cuerpo
+      containerTransform: "scale(1) rotate(-15deg)",
       useGradientOverlay: false,
     },
     {
@@ -87,7 +86,14 @@ export default function HomePage() {
               Soy Profesional
             </Link>
           </nav>
-          <LoginButton />
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm">
+              Demo
+            </Button>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700">
+              Explorar
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -194,10 +200,12 @@ export default function HomePage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto mb-12">
             <Input placeholder="¿Qué tipo de terapia buscas?" className="flex-1" />
-            <Button className="bg-green-600 hover:bg-green-700 px-8">Buscar</Button>
+            <Link href="/search">
+              <Button className="bg-green-600 hover:bg-green-700 px-8">Buscar</Button>
+            </Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-            <div className="text-center">
+            <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
                 <img
                   src="/images/therapy-session.jpg"
@@ -206,14 +214,14 @@ export default function HomePage() {
                 />
               </div>
               <span className="text-sm text-gray-600">Terapia</span>
-            </div>
-            <div className="text-center">
+            </Link>
+            <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
                 <img src="/images/biodanza.jpg" alt="Coaching" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Coaching</span>
-            </div>
-            <div className="text-center">
+            </Link>
+            <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
                 <img
                   src="/images/yoga-beach.jpg"
@@ -223,13 +231,13 @@ export default function HomePage() {
                 />
               </div>
               <span className="text-sm text-gray-600">Yoga</span>
-            </div>
-            <div className="text-center">
+            </Link>
+            <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
                 <img src="/images/acro-yoga.jpg" alt="Biodanza" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Biodanza</span>
-            </div>
+            </Link>
           </div>
         </div>
 

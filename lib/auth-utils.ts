@@ -2,7 +2,11 @@
 
 // Función para detectar si estamos en v0
 export function isV0Environment(): boolean {
-  if (typeof window === "undefined") return false
+  // Durante el build/SSR, window no está disponible
+  if (typeof window === "undefined") {
+    // En el servidor, verificar variables de entorno
+    return process.env.VERCEL_ENV === "preview" || process.env.NODE_ENV === "development"
+  }
 
   return (
     window.location.hostname.includes("v0.dev") ||
