@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { AlertCircle, Leaf } from "lucide-react"
+import { AlertCircle, Leaf, CheckCircle } from "lucide-react"
 import Link from "next/link"
 
 interface AuthErrorPageProps {
@@ -14,6 +14,8 @@ export default function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
 
   const getErrorMessage = (error?: string) => {
     switch (error) {
+      case "Demo":
+        return "Estás en modo demo. La autenticación real no está disponible, pero puedes probar todas las funcionalidades."
       case "Configuration":
         return "Hay un problema con la configuración del servidor."
       case "AccessDenied":
@@ -39,9 +41,11 @@ export default function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
       case "SessionRequired":
         return "Debes iniciar sesión para acceder a esta página."
       default:
-        return "Ha ocurrido un error inesperado durante el inicio de sesión."
+        return "Ha ocurrido un error durante el proceso de autenticación."
     }
   }
+
+  const isDemo = error === "Demo"
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 flex items-center justify-center p-4">
@@ -56,26 +60,58 @@ export default function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
 
         <Card className="shadow-lg">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-              <AlertCircle className="h-6 w-6 text-red-600" />
+            <div
+              className={`mx-auto w-12 h-12 rounded-full flex items-center justify-center mb-4 ${
+                isDemo ? "bg-green-100" : "bg-red-100"
+              }`}
+            >
+              {isDemo ? (
+                <CheckCircle className="h-6 w-6 text-green-600" />
+              ) : (
+                <AlertCircle className="h-6 w-6 text-red-600" />
+              )}
             </div>
-            <CardTitle className="text-2xl text-red-600">Error de Autenticación</CardTitle>
+            <CardTitle className={`text-2xl ${isDemo ? "text-green-600" : "text-red-600"}`}>
+              {isDemo ? "Modo Demo Activo" : "Error de Autenticación"}
+            </CardTitle>
             <CardDescription className="text-center">{getErrorMessage(error)}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-center space-y-3">
-              <p className="text-sm text-gray-600">
-                Si el problema persiste, por favor contacta a nuestro equipo de soporte.
-              </p>
+              {isDemo ? (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-600">
+                    Puedes explorar todas las funcionalidades usando el botón "Demo" en cualquier página.
+                  </p>
+                  <div className="bg-green-50 p-3 rounded-lg">
+                    <p className="text-xs text-green-700">
+                      ✨ <strong>Funcionalidades disponibles:</strong>
+                      <br />• Búsqueda de profesionales
+                      <br />• Mapa interactivo
+                      <br />• Perfiles y reservas
+                      <br />• Sistema de mensajería
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Si el problema persiste, por favor contacta a nuestro equipo de soporte.
+                </p>
+              )}
+
               <div className="space-y-2">
-                <Link href="/auth/signin">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">Intentar de nuevo</Button>
-                </Link>
                 <Link href="/">
-                  <Button variant="outline" className="w-full bg-transparent">
-                    Volver al inicio
+                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                    {isDemo ? "Explorar Demo" : "Volver al inicio"}
                   </Button>
                 </Link>
+                {!isDemo && (
+                  <Link href="/auth/signin">
+                    <Button variant="outline" className="w-full bg-transparent">
+                      Intentar de nuevo
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </CardContent>
@@ -84,7 +120,7 @@ export default function AuthErrorPage({ searchParams }: AuthErrorPageProps) {
         {process.env.NODE_ENV === "development" && error && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-xs text-yellow-800">
-              <strong>Error de desarrollo:</strong> {error}
+              <strong>Info de desarrollo:</strong> Error tipo "{error}"
             </p>
           </div>
         )}

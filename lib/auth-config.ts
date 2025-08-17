@@ -1,37 +1,23 @@
-import type { NextAuthOptions } from "next-auth"
-import GoogleProvider from "next-auth/providers/google"
+// Archivo simplificado que solo exporta tipos y configuración básica
+export interface AuthUser {
+  id: string
+  name?: string | null
+  email?: string | null
+  image?: string | null
+}
 
-export const authOptions: NextAuthOptions = {
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
+export interface AuthSession {
+  user: AuthUser
+  expires: string
+}
+
+// Configuración básica que se puede usar sin importar NextAuth
+export const authConfig = {
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
   },
-  callbacks: {
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.sub!
-      }
-      return session
-    },
-    async jwt({ token, account, user }) {
-      if (account && user) {
-        token.accessToken = account.access_token
-      }
-      return token
-    },
-    async signIn({ user, account, profile }) {
-      return true
-    },
-  },
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === "development",
 }

@@ -11,32 +11,25 @@ interface GoogleSignInButtonProps {
 
 export function GoogleSignInButton({ callbackUrl = "/" }: GoogleSignInButtonProps) {
   const mockAuth = useMockAuth()
-  const [nextAuthSignIn, setNextAuthSignIn] = React.useState<any>(null)
   const [isLoading, setIsLoading] = React.useState(false)
   const isV0 = isV0Environment()
-
-  React.useEffect(() => {
-    // Solo cargar NextAuth si NO estamos en v0
-    if (!isV0) {
-      const loadNextAuth = async () => {
-        try {
-          const { signIn } = await import("next-auth/react")
-          setNextAuthSignIn(() => signIn)
-        } catch (error) {
-          console.warn("NextAuth not available:", error)
-        }
-      }
-      loadNextAuth()
-    }
-  }, [isV0])
 
   const handleSignIn = async () => {
     try {
       setIsLoading(true)
+
       if (isV0) {
+        // En v0, usar siempre mock auth
         await mockAuth.signIn("google")
-      } else if (nextAuthSignIn) {
-        await nextAuthSignIn("google", { callbackUrl })
+      } else {
+        // En producción, intentar usar NextAuth
+        try {
+          const { signIn } = await import("next-auth/react")
+          await signIn("google", { callbackUrl })
+        } catch (error) {
+          console.warn("NextAuth not available, using mock:", error)
+          await mockAuth.signIn("google")
+        }
       }
     } catch (error) {
       console.error("Error signing in:", error)

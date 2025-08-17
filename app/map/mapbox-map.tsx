@@ -38,13 +38,28 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
     }
   }, [locations, mapboxReady])
 
+  // Centrar el mapa cuando se selecciona una ubicación
+  useEffect(() => {
+    if (map.current && selectedLocation) {
+      const selectedLocationData = locations.find((loc) => loc.id === selectedLocation)
+      if (selectedLocationData) {
+        map.current.flyTo({
+          center: [selectedLocationData.coordinates.lng, selectedLocationData.coordinates.lat],
+          zoom: 15, // Zoom más cercano para ver mejor el área
+          duration: 1500, // Animación suave de 1.5 segundos
+          essential: true,
+        })
+      }
+    }
+  }, [selectedLocation, locations])
+
   const initializeMap = () => {
     if (!mapContainer.current || !(window as any).mapboxgl) return
 
     map.current = new (window as any).mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/light-v11",
-      center: [-99.1332, 19.4326], // Mexico City [lng, lat]
+      center: [-70.6483, -33.4569], // Santiago de Chile [lng, lat]
       zoom: 11,
       attributionControl: false,
     })
@@ -73,26 +88,63 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
     markersRef.current = []
 
     locations.forEach((location) => {
-      // Create custom marker element
+      // Create custom marker element with image
       const markerElement = document.createElement("div")
       markerElement.className = "custom-marker"
+
+      // Base styles for the marker container
+      const isSelected = selectedLocation === location.id
+      const baseSize = isSelected ? 50 : 44
+      const borderColor = isSelected ? "#15803d" : "#16a34a"
+      const borderWidth = isSelected ? 4 : 3
+
       markerElement.style.cssText = `
-        width: 40px;
-        height: 40px;
+        width: ${baseSize}px;
+        height: ${baseSize}px;
         border-radius: 50%;
-        background: #16a34a;
-        border: 3px solid white;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        border: ${borderWidth}px solid ${borderColor};
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         cursor: pointer;
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+        background: white;
+        transform: ${isSelected ? "scale(1.1)" : "scale(1)"};
+        transform-origin: center center;
         display: flex;
         align-items: center;
         justify-content: center;
-        transition: all 0.2s ease;
-        ${selectedLocation === location.id ? "transform: scale(1.2); background: #15803d;" : ""}
       `
 
-      // Add icon based on type
-      const getIcon = (type: string) => {
+      // Create image element
+      const imageElement = document.createElement("img")
+      imageElement.src = location.avatar
+      imageElement.alt = location.name
+      imageElement.style.cssText = `
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+        transition: all 0.3s ease;
+        pointer-events: none;
+      `
+
+      // Add type indicator overlay
+      const typeIndicator = document.createElement("div")
+      const getTypeColor = (type: string) => {
+        switch (type) {
+          case "individual":
+            return "#3b82f6" // blue
+          case "group":
+            return "#8b5cf6" // purple
+          case "center":
+            return "#16a34a" // green
+          default:
+            return "#6b7280" // gray
+        }
+      }
+
+      const getTypeIcon = (type: string) => {
         switch (type) {
           case "individual":
             return "👤"
@@ -105,7 +157,27 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
         }
       }
 
-      markerElement.innerHTML = `<span style="font-size: 16px;">${getIcon(location.type)}</span>`
+      typeIndicator.style.cssText = `
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        width: 18px;
+        height: 18px;
+        background: ${getTypeColor(location.type)};
+        border: 2px solid white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        pointer-events: none;
+      `
+      typeIndicator.innerHTML = getTypeIcon(location.type)
+
+      // Assemble marker
+      markerElement.appendChild(imageElement)
+      markerElement.appendChild(typeIndicator)
 
       // Create popup content
       const popupContent = `
@@ -134,12 +206,17 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
       `
 
       const popup = new (window as any).mapboxgl.Popup({
-        offset: 25,
+        offset: [0, -30], // Offset específico en lugar de valor genérico
         closeButton: false,
         className: "custom-popup",
+        anchor: "bottom",
       }).setHTML(popupContent)
 
-      const marker = new (window as any).mapboxgl.Marker(markerElement)
+      const marker = new (window as any).mapboxgl.Marker({
+        element: markerElement,
+        anchor: "center", // Ancla el marcador desde el centro
+        offset: [0, 0], // Sin offset para máxima precisión
+      })
         .setLngLat([location.coordinates.lng, location.coordinates.lat])
         .setPopup(popup)
         .addTo(map.current)
@@ -153,7 +230,7 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
     })
 
     // Make selectLocation available globally for popup buttons
-    ;(window as any).selectLocation = (id: number) => {
+    window.selectLocation = (id: number) => {
       onLocationSelect(id)
     }
   }
@@ -163,12 +240,18 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
     markersRef.current.forEach((marker, index) => {
       const element = marker.getElement()
       const location = locations[index]
-      if (location && selectedLocation === location.id) {
-        element.style.transform = "scale(1.2)"
-        element.style.background = "#15803d"
-      } else {
-        element.style.transform = "scale(1)"
-        element.style.background = "#16a34a"
+      if (location) {
+        const isSelected = selectedLocation === location.id
+        const baseSize = isSelected ? 50 : 44
+        const borderColor = isSelected ? "#15803d" : "#16a34a"
+        const borderWidth = isSelected ? 4 : 3
+
+        element.style.width = `${baseSize}px`
+        element.style.height = `${baseSize}px`
+        element.style.borderColor = borderColor
+        element.style.borderWidth = `${borderWidth}px`
+        element.style.transform = isSelected ? "scale(1.1)" : "scale(1)"
+        element.style.boxShadow = isSelected ? "0 6px 20px rgba(0,0,0,0.4)" : "0 4px 12px rgba(0,0,0,0.3)"
       }
     })
   }, [selectedLocation])
@@ -196,8 +279,18 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
         .custom-popup .mapboxgl-popup-tip {
           border-top-color: white;
         }
+        .custom-marker {
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          will-change: transform;
+          backface-visibility: hidden;
+          transform-style: preserve-3d;
+        }
         .custom-marker:hover {
-          transform: scale(1.1) !important;
+          z-index: 1000;
+          filter: brightness(1.1);
+        }
+        .mapboxgl-marker {
+          will-change: transform;
         }
       `}</style>
     </div>

@@ -90,9 +90,11 @@ export default function HomePage() {
             <Button variant="ghost" size="sm">
               Demo
             </Button>
-            <Button size="sm" className="bg-green-600 hover:bg-green-700">
-              Explorar
-            </Button>
+            <Link href="/map">
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                Explorar
+              </Button>
+            </Link>
           </div>
         </div>
       </header>
