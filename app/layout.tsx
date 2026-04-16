@@ -12,6 +12,8 @@ export const metadata: Metadata = {
     generator: 'v0.app'
 }
 
+import { NextAuthProvider } from "@/components/auth/provider"
+
 export default function RootLayout({
   children,
 }: {
@@ -19,7 +21,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <NextAuthProvider>
+          {children}
+        </NextAuthProvider>
+      </body>
     </html>
   )
 }

@@ -25,3 +25,21 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+
+# IDE / SO
+.vscode/
+.idea/
+.DS_Store
+
+#archivos grandes / backups
+*.backup
+*.backup.gz
+*.gz
+
+# git lfs y otros temporales
+.gitattributes
+*.log
+*.tmp
+
+

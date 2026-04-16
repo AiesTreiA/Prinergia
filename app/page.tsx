@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { MapPin, MessageCircle, Calendar, Leaf } from "lucide-react"
 import Link from "next/link"
+import { LoginButton } from "@/components/auth/login-button"
 
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -87,14 +88,12 @@ export default function HomePage() {
             </Link>
           </nav>
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm">
-              Demo
-            </Button>
             <Link href="/map">
-              <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                Explorar
+              <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                Explorar Mapa
               </Button>
             </Link>
+            <LoginButton />
           </div>
         </div>
       </header>

@@ -12,9 +12,12 @@ import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Leaf, Upload, Plus, X } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
+import { signIn } from "next-auth/react"
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1)
+  const [email, setEmail] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [specialties, setSpecialties] = useState<string[]>([])
   const [availableTags] = useState([
     "Ansiedad",
@@ -102,7 +105,13 @@ export default function RegisterPage() {
 
                 <div>
                   <Label htmlFor="email">Correo electrónico</Label>
-                  <Input id="email" type="email" placeholder="tu@email.com" />
+                  <Input 
+                     id="email" 
+                     type="email" 
+                     placeholder="tu@email.com" 
+                     value={email}
+                     onChange={(e) => setEmail(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -335,14 +344,29 @@ export default function RegisterPage() {
 
           {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
-            <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
+            <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1 || isSubmitting}>
               Anterior
             </Button>
             <Button
-              onClick={() => (step < 3 ? setStep(step + 1) : console.log("Submit"))}
+              onClick={async () => {
+                if (step < 3) {
+                  setStep(step + 1)
+                } else {
+                  setIsSubmitting(true)
+                  // TODO: Aquí guardarás los datos del perfil en Supabase.
+                  // Y a continuación disparamos el Magic Link (Magic log-in de validación):
+                  if (email) {
+                    await signIn("email", { email, callbackUrl: "/" })
+                  } else {
+                    console.error("El email es requerido")
+                    setIsSubmitting(false)
+                  }
+                }
+              }}
+              disabled={isSubmitting}
               className="bg-green-600 hover:bg-green-700"
             >
-              {step === 3 ? "Crear Perfil" : "Siguiente"}
+              {isSubmitting ? "Procesando..." : (step === 3 ? "Crear Perfil" : "Siguiente")}
             </Button>
           </div>
 
