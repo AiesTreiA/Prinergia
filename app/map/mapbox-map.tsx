@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react"
 import { useLoadMapbox } from "@/lib/use-load-mapbox"
-import { useRouter } from "next/navigation"
 
 interface MapLocation {
   id: number
@@ -26,7 +25,6 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
   const map = useRef<any>(null)
   const markersRef = useRef<any[]>([])
   const mapboxReady = useLoadMapbox()
-  const router = useRouter()
 
   useEffect(() => {
     if (mapboxReady && mapContainer.current && !map.current) {
@@ -199,7 +197,7 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
             <span class="font-bold text-gray-800">${location.price}</span>
           </div>
           <button 
-            onclick="window.goToProfile(${location.id})" 
+            onclick="window.selectLocation(${location.id})" 
             class="w-full mt-3 bg-green-600 text-white text-xs py-2 px-3 rounded hover:bg-green-700 transition-colors"
           >
             Ver Perfil
@@ -232,13 +230,8 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
     })
 
     // Make selectLocation available globally for popup buttons
-    ;(window as any).selectLocation = (id: number) => {
+    window.selectLocation = (id: number) => {
       onLocationSelect(id)
-    }
-    
-    // Función global para redireccionar directamente sin recargar página
-    ;(window as any).goToProfile = (id: number) => {
-      router.push(`/professional/${id}`)
     }
   }
 

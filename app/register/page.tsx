@@ -9,16 +9,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Leaf, Upload, Plus, X } from "lucide-react"
+import { ArrowLeft, Leaf, Upload, Plus, X, Check } from 'lucide-react'
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
-import { signIn } from "next-auth/react"
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1)
-  const [email, setEmail] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [specialties, setSpecialties] = useState<string[]>([])
+  const [uploadedFiles, setUploadedFiles] = useState<{
+    profilePhoto?: { url: string; fileName: string }
+    cedulaProfesional?: { url: string; fileName: string }
+    certificaciones?: { url: string; fileName: string }[]
+  }>({})
+  const [uploading, setUploading] = useState<{ [key: string]: boolean }>({})
   const [availableTags] = useState([
     "Ansiedad",
     "Depresión",
@@ -45,6 +48,62 @@ export default function RegisterPage() {
 
   const removeSpecialty = (specialty: string) => {
     setSpecialties(specialties.filter((s) => s !== specialty))
+  }
+
+  const handleFileUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+    fileType: 'profilePhoto' | 'cedulaProfesional' | 'certificaciones'
+  ) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setUploading({ ...uploading, [fileType]: true })
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('fileType', fileType)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const data = await response.json()
+
+      if (fileType === 'certificaciones') {
+        setUploadedFiles({
+          ...uploadedFiles,
+          [fileType]: [
+            ...(uploadedFiles.certificaciones || []),
+            { url: data.url, fileName: data.fileName },
+          ],
+        })
+      } else {
+        setUploadedFiles({
+          ...uploadedFiles,
+          [fileType]: { url: data.url, fileName: data.fileName },
+        })
+      }
+    } catch (error) {
+      console.error('Upload error:', error)
+      alert('Error al subir el archivo. Por favor intenta de nuevo.')
+    } finally {
+      setUploading({ ...uploading, [fileType]: false })
+    }
+  }
+
+  const removeFile = (fileType: 'profilePhoto' | 'cedulaProfesional' | 'certificaciones', index?: number) => {
+    if (fileType === 'certificaciones' && index !== undefined) {
+      const updated = uploadedFiles.certificaciones?.filter((_, i) => i !== index) || []
+      setUploadedFiles({ ...uploadedFiles, certificaciones: updated })
+    } else {
+      setUploadedFiles({ ...uploadedFiles, [fileType]: undefined })
+    }
   }
 
   return (
@@ -105,13 +164,7 @@ export default function RegisterPage() {
 
                 <div>
                   <Label htmlFor="email">Correo electrónico</Label>
-                  <Input 
-                     id="email" 
-                     type="email" 
-                     placeholder="tu@email.com" 
-                     value={email}
-                     onChange={(e) => setEmail(e.target.value)}
-                  />
+                  <Input id="email" type="email" placeholder="tu@email.com" />
                 </div>
 
                 <div>
@@ -131,6 +184,7 @@ export default function RegisterPage() {
                       <SelectItem value="yoga">Profesor/a de Yoga</SelectItem>
                       <SelectItem value="biodanza">Facilitador/a de Biodanza</SelectItem>
                       <SelectItem value="terapeuta">Terapeuta Corporal</SelectItem>
+                      <SelectItem value="circo">Facilitador/a de Circo</SelectItem>
                       <SelectItem value="otro">Otro</SelectItem>
                     </SelectContent>
                   </Select>
@@ -272,13 +326,43 @@ export default function RegisterPage() {
 
                 <div>
                   <Label className="text-base font-medium mb-3 block">Foto de Perfil</Label>
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 mb-2">Arrastra tu foto aquí o haz clic para seleccionar</p>
-                    <Button variant="outline" size="sm">
-                      Seleccionar Archivo
-                    </Button>
-                  </div>
+                  {uploadedFiles.profilePhoto ? (
+                    <div className="border rounded-lg p-4 bg-green-50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <Check className="h-5 w-5 text-green-600" />
+                          <span className="text-sm text-green-700">{uploadedFiles.profilePhoto.fileName}</span>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => removeFile('profilePhoto')}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                        <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-sm text-gray-600 mb-2">Arrastra tu foto aquí o haz clic para seleccionar</p>
+                        <Button variant="outline" size="sm" asChild>
+                          <label>
+                            Seleccionar Archivo
+                            <input
+                              type="file"
+                              hidden
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, 'profilePhoto')}
+                              disabled={uploading.profilePhoto}
+                            />
+                          </label>
+                        </Button>
+                        {uploading.profilePhoto && <p className="text-xs text-gray-500 mt-2">Subiendo...</p>}
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 <div>
@@ -287,23 +371,82 @@ export default function RegisterPage() {
                     <div className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">Cédula Profesional</span>
-                        <Button variant="outline" size="sm">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Subir
-                        </Button>
+                        {uploadedFiles.cedulaProfesional ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeFile('cedulaProfesional')}
+                          >
+                            <X className="h-4 w-4 mr-2" />
+                            Reemplazar
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={uploading.cedulaProfesional}
+                            asChild
+                          >
+                            <label>
+                              <Upload className="h-4 w-4 mr-2" />
+                              {uploading.cedulaProfesional ? 'Subiendo...' : 'Subir'}
+                              <input
+                                type="file"
+                                hidden
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                onChange={(e) => handleFileUpload(e, 'cedulaProfesional')}
+                                disabled={uploading.cedulaProfesional}
+                              />
+                            </label>
+                          </Button>
+                        )}
                       </div>
-                      <p className="text-sm text-gray-600">Documento que acredita tu formación profesional</p>
+                      <p className="text-sm text-gray-600">Documento que acredita tu formación profesional. Subir cédula de identidad, si no aplica</p>
+                      {uploadedFiles.cedulaProfesional && (
+                        <p className="text-xs text-green-600 mt-2">✓ {uploadedFiles.cedulaProfesional.fileName}</p>
+                      )}
                     </div>
 
                     <div className="border rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <span className="font-medium">Certificaciones</span>
-                        <Button variant="outline" size="sm">
-                          <Upload className="h-4 w-4 mr-2" />
-                          Subir
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={uploading.certificaciones}
+                          asChild
+                        >
+                          <label>
+                            <Upload className="h-4 w-4 mr-2" />
+                            {uploading.certificaciones ? 'Subiendo...' : 'Subir'}
+                            <input
+                              type="file"
+                              hidden
+                              accept=".pdf,.jpg,.jpeg,.png"
+                              onChange={(e) => handleFileUpload(e, 'certificaciones')}
+                              disabled={uploading.certificaciones}
+                              multiple
+                            />
+                          </label>
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600">Certificados de cursos, diplomados o especializaciones</p>
+                      <p className="text-sm text-gray-600 mb-3">Certificados de cursos, diplomados o especializaciones</p>
+                      {uploadedFiles.certificaciones && uploadedFiles.certificaciones.length > 0 && (
+                        <div className="space-y-2">
+                          {uploadedFiles.certificaciones.map((cert, idx) => (
+                            <div key={idx} className="flex items-center justify-between bg-green-50 p-2 rounded text-sm">
+                              <span className="text-green-700">✓ {cert.fileName}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => removeFile('certificaciones', idx)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -342,31 +485,15 @@ export default function RegisterPage() {
             </Card>
           )}
 
-          {/* Navigation Buttons */}
           <div className="flex justify-between mt-6">
-            <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1 || isSubmitting}>
+            <Button variant="outline" onClick={() => setStep(step - 1)} disabled={step === 1}>
               Anterior
             </Button>
             <Button
-              onClick={async () => {
-                if (step < 3) {
-                  setStep(step + 1)
-                } else {
-                  setIsSubmitting(true)
-                  // TODO: Aquí guardarás los datos del perfil en Supabase.
-                  // Y a continuación disparamos el Magic Link (Magic log-in de validación):
-                  if (email) {
-                    await signIn("email", { email, callbackUrl: "/" })
-                  } else {
-                    console.error("El email es requerido")
-                    setIsSubmitting(false)
-                  }
-                }
-              }}
-              disabled={isSubmitting}
+              onClick={() => (step < 3 ? setStep(step + 1) : console.log("Submit"))}
               className="bg-green-600 hover:bg-green-700"
             >
-              {isSubmitting ? "Procesando..." : (step === 3 ? "Crear Perfil" : "Siguiente")}
+              {step === 3 ? "Crear Perfil" : "Siguiente"}
             </Button>
           </div>
 

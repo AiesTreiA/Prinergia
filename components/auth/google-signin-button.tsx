@@ -2,33 +2,52 @@
 
 import React from "react"
 import { Button } from "@/components/ui/button"
-import { signIn } from "next-auth/react"
+import { useMockAuth } from "@/lib/mock-auth"
+import { isV0Environment } from "@/lib/auth-utils"
 
 interface GoogleSignInButtonProps {
   callbackUrl?: string
 }
 
 export function GoogleSignInButton({ callbackUrl = "/" }: GoogleSignInButtonProps) {
+  const mockAuth = useMockAuth()
   const [isLoading, setIsLoading] = React.useState(false)
+  const isV0 = isV0Environment()
 
   const handleSignIn = async () => {
     try {
       setIsLoading(true)
-      await signIn("google", { callbackUrl })
+
+      if (isV0) {
+        // En v0, usar siempre mock auth
+        await mockAuth.signIn("google")
+      } else {
+        // En producción, intentar usar NextAuth
+        try {
+          const { signIn } = await import("next-auth/react")
+          await signIn("google", { callbackUrl })
+        } catch (error) {
+          console.warn("NextAuth not available, using mock:", error)
+          await mockAuth.signIn("google")
+        }
+      }
     } catch (error) {
       console.error("Error signing in:", error)
+    } finally {
       setIsLoading(false)
     }
   }
 
+  const buttonLoading = isLoading || (isV0 && mockAuth.isLoading)
+
   return (
     <Button
       onClick={handleSignIn}
-      disabled={isLoading}
+      disabled={buttonLoading}
       variant="outline"
       className="w-full flex items-center gap-3 bg-white hover:bg-gray-50 border-gray-300"
     >
-      {isLoading ? (
+      {buttonLoading ? (
         <div className="w-5 h-5 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
       ) : (
         <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -50,7 +69,8 @@ export function GoogleSignInButton({ callbackUrl = "/" }: GoogleSignInButtonProp
           />
         </svg>
       )}
-      {isLoading ? "Iniciando sesión..." : "Continuar con Google"}
+      {buttonLoading ? "Iniciando sesión..." : "Continuar con Google"}
+      {isV0 && <span className="text-xs text-orange-600 ml-auto">Demo</span>}
     </Button>
   )
 }

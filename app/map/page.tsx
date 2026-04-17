@@ -1,80 +1,151 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Star, Filter, ArrowLeft, Leaf, Search } from "lucide-react"
+import { MapPin, Star, Filter, ArrowLeft, Leaf, Search, Loader2 } from "lucide-react"
 import Link from "next/link"
 import MapboxMap from "./mapbox-map"
 import { LoginButton } from "@/components/auth/login-button"
+import { getMapLocations } from "@/lib/supabase-queries"
+import { SupabaseStatus } from "@/components/debug/supabase-status"
 
-const mapLocations = [
-  {
-    id: 1,
-    name: "Javier Mujica",
-    specialty: "Facilitador de Biodanza",
-    address: "Alcalde Fernando Castillo Velasco 7379, La Reina, Santiago, Chile",
-    rating: 4.9,
-    price: "$35.000",
-    coordinates: { lat: -33.451265937139524, lng: -70.55162381831155 },
-    avatar: "/images/biodanza.jpg",
-    type: "group",
-  },
-  {
-    id: 2,
-    name: "Dharma Yoga",
-    specialty: "Centro de Yoga Iyengar",
-    address: "Diego de Almagro 3223, Ñuñoa, Santiago, Chile",
-    rating: 4.8,
-    price: "$60.000",
-    coordinates: { lat: -33.43506812024132, lng: -70.58510818762582 },
-    avatar: "/images/sound-therapy.jpg",
-    type: "center",
-  },
-  {
-    id: 3,
-    name: "Domo La Reina",
-    specialty: "Biodanza y Arcilla",
-    address: "Av. Alcalde Fernando Castillo Velasco 10550, La Reina, Santiago, Chile",
-    rating: 4.9,
-    price: "$75.000",
-    coordinates: { lat: -33.452793140607056, lng: -70.52408616063985 },
-    avatar: "/images/acro-yoga.jpg",
-    type: "center",
-  },
-  {
-    id: 4,
-    name: "Estudio Casa Allegra",
-    specialty: "Clases de Yoga y Pilates",
-    address: "Suecia 1650, Dpto 103, Providencia, Santiago, Chile",
-    rating: 4.9,
-    price: "$45.000",
-    coordinates: { lat: -33.43536788716499, lng: -70.60249843180485 },
-    avatar: "/images/yoga-beach.jpg",
-    type: "center",
-  },
-  {
-    id: 5,
-    name: "Alejandra Ortiz - Coach",
-    specialty: "Coaching de Vida",
-    address: "Costa de Montemar, Concon, V Región, Chile",
-    rating: 4.8,
-    price: "$50.000",
-    coordinates: { lat: -32.934123590154584, lng: -71.54719752304305 },
-    avatar: "/images/ale_avatar.jpg",
-    type: "individual",
-  },
-]
+interface MapLocation {
+  id: string
+  name: string
+  specialty: string
+  address: string
+  rating: number
+  price: string
+  coordinates: { lat: number; lng: number }
+  avatar: string
+  type: string
+}
 
 export default function MapPage() {
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null)
   const [filterType, setFilterType] = useState("all")
+  const [locations, setLocations] = useState<MapLocation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const filteredLocations = mapLocations.filter((location) => filterType === "all" || location.type === filterType)
+  useEffect(() => {
+    loadMapLocations()
+  }, [])
+
+  const loadMapLocations = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      console.log("Loading map locations...")
+      const data = await getMapLocations()
+      console.log("Map locations loaded successfully:", data.length)
+
+      setLocations(data)
+
+      if (data.length === 0) {
+        setError("No se encontraron ubicaciones en la base de datos.")
+      }
+    } catch (err: any) {
+      console.error("Error loading map locations:", err)
+
+      let errorMessage = "Error al cargar las ubicaciones."
+
+      if (err.message?.includes("environment variables")) {
+        errorMessage = "Configuración de base de datos faltante. Usando datos de ejemplo."
+      } else if (err.message?.includes("Network error")) {
+        errorMessage = "Error de conexión. Verifica tu internet. Usando datos de ejemplo."
+      } else if (err.message?.includes("Database connection failed")) {
+        errorMessage = "No se puede conectar a la base de datos. Usando datos de ejemplo."
+      } else {
+        errorMessage = `Error: ${err.message}. Usando datos de ejemplo.`
+      }
+
+      setError(errorMessage)
+
+      // Fallback a datos hardcodeados si falla Supabase
+      const fallbackLocations: MapLocation[] = [
+        {
+          id: "1",
+          name: "Javier Mujica",
+          specialty: "Facilitador de Biodanza",
+          address: "Alcalde Fernando Castillo Velasco 7379, La Reina, Santiago, Chile",
+          rating: 4.9,
+          price: "$35.000",
+          coordinates: { lat: -33.451265937139524, lng: -70.55162381831155 },
+          avatar: "/images/biodanza.jpg",
+          type: "group",
+        },
+        {
+          id: "2",
+          name: "Dharma Yoga",
+          specialty: "Centro de Yoga Iyengar",
+          address: "Diego de Almagro 3223, Ñuñoa, Santiago, Chile",
+          rating: 4.8,
+          price: "$60.000",
+          coordinates: { lat: -33.43506812024132, lng: -70.58510818762582 },
+          avatar: "/images/sound-therapy.jpg",
+          type: "center",
+        },
+        {
+          id: "3",
+          name: "Domo La Reina",
+          specialty: "Biodanza y Arcilla",
+          address: "Av. Alcalde Fernando Castillo Velasco 10550, La Reina, Santiago, Chile",
+          rating: 4.9,
+          price: "$75.000",
+          coordinates: { lat: -33.452793140607056, lng: -70.52408616063985 },
+          avatar: "/images/acro-yoga.jpg",
+          type: "center",
+        },
+        {
+          id: "4",
+          name: "Estudio Casa Allegra",
+          specialty: "Clases de Yoga y Pilates",
+          address: "Suecia 1650, Dpto 103, Providencia, Santiago, Chile",
+          rating: 4.9,
+          price: "$45.000",
+          coordinates: { lat: -33.43536788716499, lng: -70.60249843180485 },
+          avatar: "/images/yoga-beach.jpg",
+          type: "center",
+        },
+        {
+          id: "5",
+          name: "Alejandra Ortiz - Coach",
+          specialty: "Coaching de Vida",
+          address: "Costa de Montemar, Concon, V Región, Chile",
+          rating: 4.8,
+          price: "$50.000",
+          coordinates: { lat: -32.934123590154584, lng: -71.54719752304305 },
+          avatar: "/images/ale_avatar.jpg",
+          type: "individual",
+        },
+      ]
+
+      console.log("Using fallback data:", fallbackLocations.length, "locations")
+      setLocations(fallbackLocations)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filteredLocations = locations.filter((location) => filterType === "all" || location.type === filterType)
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-green-600 mx-auto mb-4" />
+          <p className="text-gray-600">Cargando ubicaciones...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -92,10 +163,20 @@ export default function MapPage() {
         </div>
       </header>
 
+      {/* Debug Component */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="container mx-auto px-4 py-4">
+          <SupabaseStatus />
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Mapa de Profesionales</h1>
-          <p className="text-gray-600">Encuentra profesionales del bienestar cerca de ti</p>
+          <p className="text-gray-600">
+            Encuentra profesionales del bienestar cerca de ti
+            {error && <span className="text-orange-600 ml-2">({error})</span>}
+          </p>
         </div>
 
         {/* Search and Filters */}
@@ -121,6 +202,20 @@ export default function MapPage() {
               Filtros
             </Button>
           </div>
+          <div className="mt-4 flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMapLocations}
+              className="flex items-center gap-2 bg-transparent"
+            >
+              <Loader2 className="h-3 w-3" />
+              Actualizar
+            </Button>
+            <span className="text-sm text-gray-500">
+              {locations.length > 0 ? `${locations.length} ubicaciones cargadas` : "Sin datos"}
+            </span>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -129,7 +224,10 @@ export default function MapPage() {
             <Card className="h-[600px]">
               <CardContent className="p-0 h-full">
                 <MapboxMap
-                  locations={filteredLocations}
+                  locations={filteredLocations.map((loc, index) => ({
+                    ...loc,
+                    id: Number.parseInt(loc.id) || index + 1,
+                  }))}
                   selectedLocation={selectedLocation}
                   onLocationSelect={setSelectedLocation}
                 />
@@ -154,13 +252,15 @@ export default function MapPage() {
             </div>
 
             <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {filteredLocations.map((location) => (
+              {filteredLocations.map((location, index) => (
                 <Card
                   key={location.id}
                   className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedLocation === location.id ? "ring-2 ring-green-600 bg-green-50" : ""
+                    selectedLocation === (Number.parseInt(location.id) || index + 1)
+                      ? "ring-2 ring-green-600 bg-green-50"
+                      : ""
                   }`}
-                  onClick={() => setSelectedLocation(location.id)}
+                  onClick={() => setSelectedLocation(Number.parseInt(location.id) || index + 1)}
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">

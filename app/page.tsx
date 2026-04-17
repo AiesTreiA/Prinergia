@@ -4,9 +4,8 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { MapPin, MessageCircle, Calendar, Leaf } from "lucide-react"
+import { MapPin, MessageCircle, Calendar, Leaf } from 'lucide-react'
 import Link from "next/link"
-import { LoginButton } from "@/components/auth/login-button"
 
 export default function HomePage() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -36,6 +35,13 @@ export default function HomePage() {
     },
     {
       src: "/images/acro-yoga.jpg",
+      backgroundSize: "cover",
+      backgroundPosition: "center center",
+      containerTransform: "scale(1) rotate(0deg)",
+      useGradientOverlay: false,
+    },
+    {
+      src: "/images/circo-icon.jpg",
       backgroundSize: "cover",
       backgroundPosition: "center center",
       containerTransform: "scale(1) rotate(0deg)",
@@ -88,12 +94,14 @@ export default function HomePage() {
             </Link>
           </nav>
           <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm">
+              Demo
+            </Button>
             <Link href="/map">
-              <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                Explorar Mapa
+              <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                Explorar
               </Button>
             </Link>
-            <LoginButton />
           </div>
         </div>
       </header>
@@ -195,7 +203,7 @@ export default function HomePage() {
               <Button className="bg-green-600 hover:bg-green-700 px-8">Buscar</Button>
             </Link>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 max-w-4xl mx-auto">
             <Link href="/search" className="text-center hover:scale-105 transition-transform">
               <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
                 <img
@@ -223,6 +231,12 @@ export default function HomePage() {
                 <img src="/images/acro-yoga.jpg" alt="Biodanza" className="w-full h-full object-cover rounded-full" />
               </div>
               <span className="text-sm text-gray-600">Biodanza</span>
+            </Link>
+            <Link href="/search" className="text-center hover:scale-105 transition-transform">
+              <div className="bg-white rounded-full p-2 w-16 h-16 mx-auto mb-2 shadow-md overflow-hidden">
+                <img src="/images/circo-icon.jpg" alt="Circo" className="w-full h-full object-cover rounded-full" />
+              </div>
+              <span className="text-sm text-gray-600">Circo</span>
             </Link>
           </div>
         </div>

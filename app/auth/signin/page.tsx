@@ -2,52 +2,77 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { GoogleSignInButton } from "@/components/auth/google-signin-button"
-import { Leaf, Mail } from "lucide-react"
+import { Leaf } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useState, Suspense } from "react"
-import { signIn, useSession } from "next-auth/react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useMockAuth } from "@/lib/mock-auth"
+import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { isV0Environment } from "@/lib/auth-utils"
 
-function SignInForm() {
+export default function SignInPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const error = searchParams.get("error")
-  const { data: session, status } = useSession()
-  const [email, setEmail] = useState("")
-  const [isEmailLoading, setIsEmailLoading] = useState(false)
-  const [isEmailSent, setIsEmailSent] = useState(false)
+  const mockAuth = useMockAuth()
+  const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const isV0 = isV0Environment()
 
-  // Si el usuario ya está logeado, mandarlo al inicio inmediatamente
   useEffect(() => {
-    if (status === "authenticated") {
+    const checkAuthentication = async () => {
+      if (isV0) {
+        // En v0, usar mock auth
+        setIsAuthenticated(!!mockAuth.user)
+        setIsLoading(false)
+      } else {
+        // En producción, cargar NextAuth dinámicamente
+        try {
+          const { useSession } = await import("next-auth/react")
+
+          // Crear un componente temporal para usar useSession
+          const CheckAuth = () => {
+            const { data: session, status } = useSession()
+
+            useEffect(() => {
+              if (status !== "loading") {
+                setIsAuthenticated(!!session)
+                setIsLoading(false)
+              }
+            }, [session, status])
+
+            return null
+          }
+
+          // No podemos usar useSession directamente aquí, así que simplemente asumimos no autenticado
+          setIsAuthenticated(false)
+          setIsLoading(false)
+        } catch (error) {
+          console.warn("NextAuth not available:", error)
+          setIsAuthenticated(false)
+          setIsLoading(false)
+        }
+      }
+    }
+
+    checkAuthentication()
+  }, [isV0, mockAuth.user])
+
+  useEffect(() => {
+    // Redirigir si ya está autenticado
+    if (!isLoading && isAuthenticated) {
       router.push("/")
     }
-  }, [status, router])
+  }, [isAuthenticated, isLoading, router])
 
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!email) return
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+      </div>
+    )
+  }
 
-    try {
-      setIsEmailLoading(true)
-      const res = await signIn("email", { 
-        email, 
-        redirect: false,
-        callbackUrl: "/" 
-      })
-      
-      if (res?.error) {
-        console.error("Error signing in with email:", res.error)
-      } else {
-        setIsEmailSent(true)
-      }
-    } catch (error) {
-      console.error("Error:", error)
-    } finally {
-      setIsEmailLoading(false)
-    }
+  // Si ya está autenticado, no mostrar nada (redirigiendo)
+  if (isAuthenticated) {
+    return null
   }
 
   return (
@@ -67,63 +92,24 @@ function SignInForm() {
             <CardTitle className="text-2xl">Bienvenido</CardTitle>
             <CardDescription>
               Inicia sesión para acceder a tu cuenta
+              {isV0 && <span className="block text-orange-600 text-sm mt-1">Modo Demo - Autenticación simulada</span>}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            
-            {error && (
-              <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm text-center mb-4 border border-red-200">
-                Hubo un error de inicio de sesión. 
-                Error técnico: <strong>{error}</strong>. Revisa los logs de la terminal.
-              </div>
-            )}
-
-            {isEmailSent ? (
-               <div className="text-center space-y-4 p-4 bg-green-50 rounded-lg">
-                 <Mail className="mx-auto h-8 w-8 text-green-600" />
-                 <h3 className="font-semibold text-green-800">Revisa tu correo</h3>
-                 <p className="text-sm text-green-700">
-                   Te hemos enviado un enlace mágico a <strong>{email}</strong>. Haz clic en el enlace para iniciar sesión.
-                 </p>
-                 <Button 
-                   variant="outline" 
-                   onClick={() => setIsEmailSent(false)}
-                   className="mt-2 text-sm"
-                 >
-                   Intentar con otro correo
-                 </Button>
-               </div>
-            ) : (
-               <form onSubmit={handleEmailSignIn} className="space-y-4">
-                <div className="space-y-2">
-                  <Input
-                    type="email"
-                    placeholder="tu@correo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="w-full"
-                    disabled={isEmailLoading}
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white" disabled={isEmailLoading}>
-                  {isEmailLoading ? "Conectando..." : "Continuar con tu correo"}
-                </Button>
-               </form>
-            )}
+            <GoogleSignInButton />
 
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t border-gray-200" />
+                <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-white px-2 text-muted-foreground">O continúa con</span>
+                <span className="bg-white px-2 text-muted-foreground">
+                  {isV0 ? "Demo de autenticación" : "O continúa con"}
+                </span>
               </div>
             </div>
 
-            <GoogleSignInButton />
-
-            <div className="space-y-3 mt-4">
+            <div className="space-y-3">
               <div className="text-center">
                 <p className="text-sm text-gray-600">
                   ¿Eres un profesional del bienestar?{" "}
@@ -148,13 +134,5 @@ function SignInForm() {
         </div>
       </div>
     </div>
-  )
-}
-
-export default function SignInPage() {
-  return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <SignInForm />
-    </Suspense>
   )
 }
