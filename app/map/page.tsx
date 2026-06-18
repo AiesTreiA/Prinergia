@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,68 +11,40 @@ import { MapPin, Star, Filter, ArrowLeft, Leaf, Search } from "lucide-react"
 import Link from "next/link"
 import MapboxMap from "./mapbox-map"
 import { LoginButton } from "@/components/auth/login-button"
+import { AddLocationModal } from "@/components/map/add-location-modal"
+import { createClient } from "@supabase/supabase-js"
 
-const mapLocations = [
-  {
-    id: 1,
-    name: "Javier Mujica",
-    specialty: "Facilitador de Biodanza",
-    address: "Alcalde Fernando Castillo Velasco 7379, La Reina, Santiago, Chile",
-    rating: 4.9,
-    price: "$35.000",
-    coordinates: { lat: -33.451265937139524, lng: -70.55162381831155 },
-    avatar: "/images/biodanza.jpg",
-    type: "group",
-  },
-  {
-    id: 2,
-    name: "Dharma Yoga",
-    specialty: "Centro de Yoga Iyengar",
-    address: "Diego de Almagro 3223, Ñuñoa, Santiago, Chile",
-    rating: 4.8,
-    price: "$60.000",
-    coordinates: { lat: -33.43506812024132, lng: -70.58510818762582 },
-    avatar: "/images/sound-therapy.jpg",
-    type: "center",
-  },
-  {
-    id: 3,
-    name: "Domo La Reina",
-    specialty: "Biodanza y Arcilla",
-    address: "Av. Alcalde Fernando Castillo Velasco 10550, La Reina, Santiago, Chile",
-    rating: 4.9,
-    price: "$75.000",
-    coordinates: { lat: -33.452793140607056, lng: -70.52408616063985 },
-    avatar: "/images/acro-yoga.jpg",
-    type: "center",
-  },
-  {
-    id: 4,
-    name: "Estudio Casa Allegra",
-    specialty: "Clases de Yoga y Pilates",
-    address: "Suecia 1650, Dpto 103, Providencia, Santiago, Chile",
-    rating: 4.9,
-    price: "$45.000",
-    coordinates: { lat: -33.43536788716499, lng: -70.60249843180485 },
-    avatar: "/images/yoga-beach.jpg",
-    type: "center",
-  },
-  {
-    id: 5,
-    name: "Alejandra Ortiz - Coach",
-    specialty: "Coaching de Vida",
-    address: "Costa de Montemar, Concon, V Región, Chile",
-    rating: 4.8,
-    price: "$50.000",
-    coordinates: { lat: -32.934123590154584, lng: -71.54719752304305 },
-    avatar: "/images/ale_avatar.jpg",
-    type: "individual",
-  },
-]
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
+const supabase = createClient(supabaseUrl, supabaseKey)
 
 export default function MapPage() {
   const [selectedLocation, setSelectedLocation] = useState<number | null>(null)
   const [filterType, setFilterType] = useState("all")
+  const [mapLocations, setMapLocations] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchLocations = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from("map_locations")
+      .select("*")
+      .order("created_at", { ascending: false })
+      
+    if (!error && data) {
+      // Mapear los datos que vienen directo de Supabase a la estructura que espera el mapa
+      const formatted = data.map(item => ({
+        ...item,
+        coordinates: { lat: item.lat, lng: item.lng }
+      }))
+      setMapLocations(formatted)
+    }
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    fetchLocations()
+  }, [])
 
   const filteredLocations = mapLocations.filter((location) => filterType === "all" || location.type === filterType)
 
@@ -93,9 +65,14 @@ export default function MapPage() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Mapa de Profesionales</h1>
-          <p className="text-gray-600">Encuentra profesionales del bienestar cerca de ti</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Mapa de Profesionales</h1>
+            <p className="text-gray-600">Encuentra profesionales del bienestar cerca de ti</p>
+          </div>
+          <div>
+            <AddLocationModal onLocationAdded={fetchLocations} />
+          </div>
         </div>
 
         {/* Search and Filters */}
@@ -169,7 +146,7 @@ export default function MapPage() {
                         <AvatarFallback>
                           {location.name
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
