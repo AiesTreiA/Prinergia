@@ -873,14 +873,14 @@ export default function HomePage() {
                       </div>
                       
                       {/* SVG Diagram representing the technology flow */}
-                      <svg viewBox="0 0 200 240" className="w-full h-auto max-w-[200px] mx-auto overflow-visible mt-6">
+                      <svg viewBox="0 0 320 360" className="w-full h-auto max-w-[340px] mx-auto overflow-visible mt-6">
                         <defs>
                           <linearGradient id="cyberGrad" x1="0%" y1="0%" x2="100%" y2="100%">
                             <stop offset="0%" stopColor="#e2622c" />
                             <stop offset="100%" stopColor="#5c6b45" />
                           </linearGradient>
                           <filter id="glow">
-                            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+                            <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
                             <feMerge>
                               <feMergeNode in="coloredBlur"/>
                               <feMergeNode in="SourceGraphic"/>
@@ -889,39 +889,39 @@ export default function HomePage() {
                         </defs>
 
                         {/* Tree branches/lines */}
-                        <path d="M 100 210 L 100 130" stroke="url(#cyberGrad)" strokeWidth="2.5" fill="none" />
-                        <path d="M 100 130 L 40 90" stroke="#e2622c" strokeWidth="1.5" fill="none" strokeDasharray="3,3" />
-                        <path d="M 100 130 L 160 90" stroke="#5c6b45" strokeWidth="1.5" fill="none" strokeDasharray="3,3" />
-                        <path d="M 40 90 L 40 40" stroke="#e2622c" strokeWidth="1.5" fill="none" />
-                        <path d="M 160 90 L 160 40" stroke="#5c6b45" strokeWidth="1.5" fill="none" />
+                        <path d="M 160 300 L 160 190" stroke="url(#cyberGrad)" strokeWidth="3" fill="none" />
+                        <path d="M 160 190 L 60 130" stroke="#e2622c" strokeWidth="2" fill="none" strokeDasharray="3,3" />
+                        <path d="M 160 190 L 260 130" stroke="#5c6b45" strokeWidth="2" fill="none" strokeDasharray="3,3" />
+                        <path d="M 60 130 L 60 60" stroke="#e2622c" strokeWidth="2" fill="none" />
+                        <path d="M 260 130 L 260 60" stroke="#5c6b45" strokeWidth="2" fill="none" />
                         
                         {/* Nodes */}
                         {/* Root: Identity */}
-                        <circle cx="100" cy="210" r="14" fill="#211a15" stroke="#e2622c" strokeWidth="2" filter="url(#glow)" />
-                        <text x="100" y="213" fill="#ffffff" fontSize="6" fontFamily="monospace" textAnchor="middle" fontWeight="bold">LOGIN</text>
-                        <text x="100" y="233" fill="#a89a8d" fontSize="6" fontFamily="monospace" textAnchor="middle">NextAuth (Seguridad P2P)</text>
+                        <circle cx="160" cy="300" r="22" fill="#211a15" stroke="#e2622c" strokeWidth="2.5" filter="url(#glow)" />
+                        <text x="160" y="303.5" fill="#ffffff" fontSize="9.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">LOGIN</text>
+                        <text x="160" y="334" fill="#a89a8d" fontSize="9" fontFamily="monospace" textAnchor="middle">NextAuth (Seguridad P2P)</text>
                         
                         {/* Server core */}
-                        <circle cx="100" cy="130" r="16" fill="#211a15" stroke="url(#cyberGrad)" strokeWidth="2" filter="url(#glow)" />
-                        <text x="100" y="133" fill="#ffffff" fontSize="6" fontFamily="monospace" textAnchor="middle" fontWeight="bold">NEXT.JS</text>
-                        <text x="100" y="154" fill="#a89a8d" fontSize="6" fontFamily="monospace" textAnchor="middle">Servidor Soberano</text>
+                        <circle cx="160" cy="190" r="24" fill="#211a15" stroke="url(#cyberGrad)" strokeWidth="2.5" filter="url(#glow)" />
+                        <text x="160" y="193.5" fill="#ffffff" fontSize="9.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">NEXT.JS</text>
+                        <text x="160" y="226" fill="#a89a8d" fontSize="9" fontFamily="monospace" textAnchor="middle">Servidor Soberano</text>
 
                         {/* Database Vault */}
-                        <circle cx="40" cy="90" r="14" fill="#211a15" stroke="#e2622c" strokeWidth="2" filter="url(#glow)" />
-                        <text x="40" y="93" fill="#ffffff" fontSize="6" fontFamily="monospace" textAnchor="middle" fontWeight="bold">RLS</text>
+                        <circle cx="60" cy="130" r="20" fill="#211a15" stroke="#e2622c" strokeWidth="2.5" filter="url(#glow)" />
+                        <text x="60" y="133.5" fill="#ffffff" fontSize="9.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">RLS</text>
                         
                         {/* Map View */}
-                        <circle cx="160" cy="90" r="14" fill="#211a15" stroke="#5c6b45" strokeWidth="2" filter="url(#glow)" />
-                        <text x="160" y="93" fill="#ffffff" fontSize="6" fontFamily="monospace" textAnchor="middle" fontWeight="bold">MAPA</text>
+                        <circle cx="260" cy="130" r="20" fill="#211a15" stroke="#5c6b45" strokeWidth="2.5" filter="url(#glow)" />
+                        <text x="260" y="133.5" fill="#ffffff" fontSize="9.5" fontFamily="monospace" textAnchor="middle" fontWeight="bold">MAPA</text>
 
                         {/* Leaf nodes */}
-                        <circle cx="40" cy="40" r="8" fill="#171310" stroke="#e2622c" strokeWidth="1" />
-                        <text x="40" y="42" fill="#a89a8d" fontSize="5" fontFamily="monospace" textAnchor="middle">BÓVEDA</text>
-                        <text x="40" y="27" fill="#f2a154" fontSize="5" fontFamily="monospace" textAnchor="middle">Supabase</text>
+                        <circle cx="60" cy="60" r="14" fill="#171310" stroke="#e2622c" strokeWidth="1.5" />
+                        <text x="60" y="63" fill="#a89a8d" fontSize="8" fontFamily="monospace" textAnchor="middle">BÓVEDA</text>
+                        <text x="60" y="40" fill="#f2a154" fontSize="9" fontFamily="monospace" textAnchor="middle">Supabase</text>
 
-                        <circle cx="160" cy="40" r="8" fill="#171310" stroke="#5c6b45" strokeWidth="1" />
-                        <text x="160" y="42" fill="#a89a8d" fontSize="5" fontFamily="monospace" textAnchor="middle">NUDO</text>
-                        <text x="160" y="27" fill="#b5c79e" fontSize="5" fontFamily="monospace" textAnchor="middle">Leaflet</text>
+                        <circle cx="260" cy="60" r="14" fill="#171310" stroke="#5c6b45" strokeWidth="1.5" />
+                        <text x="260" y="63" fill="#a89a8d" fontSize="8" fontFamily="monospace" textAnchor="middle">NUDO</text>
+                        <text x="260" y="40" fill="#b5c79e" fontSize="9" fontFamily="monospace" textAnchor="middle">Leaflet</text>
                       </svg>
 
                       <p className="text-[10px] text-center text-[#a89a8d] leading-relaxed mt-4">
