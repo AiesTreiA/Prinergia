@@ -1,16 +1,30 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter } from "next/font/google"
+import { Inter, Fraunces, IBM_Plex_Mono } from "next/font/google"
 import "./globals.css"
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
+const fraunces = Fraunces({ 
+  subsets: ["latin"], 
+  weight: ["400", "600", "700"], 
+  variable: "--font-fraunces" 
+})
+const ibmPlexMono = IBM_Plex_Mono({ 
+  subsets: ["latin"], 
+  weight: ["400", "500", "600"], 
+  variable: "--font-mono" 
+})
 
 export const metadata: Metadata = {
-  title: "Prinergia - Conecta con tu Bienestar Interior",
+  title: "Raíz — Red de linajes de bienestar",
   description:
-    "Plataforma que conecta terapeutas, coaches, profesores de yoga y facilitadores de biodanza con personas que buscan bienestar emocional y corporal.",
-    generator: 'v0.app'
+    "Mapeamos las escuelas y linajes de Biodanza, Yoga, Temazcal, Reiki y Sonoterapia en Chile, Argentina y Colombia. Encuentra tu fuego más cercano.",
+  generator: 'v0.app',
+  icons: {
+    icon: '/favicon.png',
+  }
 }
+
 
 import { NextAuthProvider } from "@/components/auth/provider"
 
@@ -21,7 +35,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${fraunces.variable} ${ibmPlexMono.variable}`}>
         <NextAuthProvider>
           {children}
         </NextAuthProvider>

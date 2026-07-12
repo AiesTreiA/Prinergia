@@ -4,13 +4,15 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Calendar, Loader2, ArrowLeft, Leaf } from "lucide-react"
+import { User, Mail, Calendar, Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
 import { supabase } from "@/lib/supabase"
 import { useMockAuth } from "@/lib/mock-auth"
 import { useRouter } from "next/navigation"
 import { isV0Environment } from "@/lib/auth-utils"
+import { useSession } from "next-auth/react"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 interface UserProfile {
   id: string
@@ -23,25 +25,11 @@ interface UserProfile {
 export default function UserProfilePage() {
   const mockAuth = useMockAuth()
   const router = useRouter()
+  const { data: session, status } = useSession()
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [authData, setAuthData] = useState<any>(null)
   const isV0 = isV0Environment()
-
-  useEffect(() => {
-    const loadAuthData = async () => {
-      if (!isV0) {
-        try {
-          const { useSession } = await import("next-auth/react")
-          setAuthData({ useSession })
-        } catch (error) {
-          console.warn("NextAuth not available:", error)
-        }
-      }
-    }
-    loadAuthData()
-  }, [isV0])
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -59,14 +47,17 @@ export default function UserProfilePage() {
         userImage = mockAuth.user?.image
         isAuthenticated = !!mockAuth.user
       } else {
-        // En producción, necesitamos manejar NextAuth de forma diferente
-        // Por ahora, asumimos no autenticado hasta que se implemente correctamente
-        isAuthenticated = false
+        if (status === "loading") {
+          return // Esperar a que NextAuth termine de cargar la sesión
+        }
+        userEmail = session?.user?.email || undefined
+        userName = session?.user?.name || undefined
+        userImage = session?.user?.image || undefined
+        isAuthenticated = status === "authenticated"
       }
 
       if (!isAuthenticated) {
         if (isV0) {
-          // En v0, no redirigir automáticamente
           setError("No hay sesión activa. Inicia sesión para ver tu perfil.")
         } else {
           router.push("/auth/signin")
@@ -83,7 +74,14 @@ export default function UserProfilePage() {
       }
 
       if (!supabase) {
-        setError("Supabase no está inicializado. Verifica las variables de entorno.")
+        // Si Supabase no está configurado, podemos usar los datos de la sesión directamente
+        setUserProfile({
+          id: "local-user",
+          email: userEmail,
+          name: userName || "Usuario",
+          avatar_url: userImage,
+          created_at: new Date().toISOString(),
+        })
         setLoading(false)
         return
       }
@@ -94,7 +92,7 @@ export default function UserProfilePage() {
         if (dbError) {
           console.error("Error fetching user profile from DB:", dbError)
 
-          // Si el usuario no existe, crearlo
+          // Si el usuario no existe, crearlo en la DB
           if (dbError.code === "PGRST116" && userName) {
             console.log("Usuario no encontrado en DB, creando nuevo usuario.")
             const { data: newUser, error: insertError } = await supabase
@@ -130,8 +128,12 @@ export default function UserProfilePage() {
       }
     }
 
-    fetchUserProfile()
-  }, [mockAuth.user, isV0, router])
+    if (!isV0 && status === "loading") {
+      setLoading(true)
+    } else {
+      fetchUserProfile()
+    }
+  }, [mockAuth.user, isV0, router, session, status])
 
   if (loading) {
     return (
@@ -149,8 +151,8 @@ export default function UserProfilePage() {
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-bold text-green-800">Prinergia</span>
+              <RaizIcon className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-800">Raíz·Red</span>
             </Link>
           </div>
           <LoginButton />
@@ -182,7 +184,7 @@ export default function UserProfilePage() {
                   <AvatarImage
                     src={
                       userProfile.avatar_url ||
-                      (isV0 ? mockAuth.user?.image : null) ||
+                      (isV0 ? mockAuth.user?.image : session?.user?.image) ||
                       "/placeholder.svg?height=96&width=96&text=User"
                     }
                     alt={userProfile.name || "User Avatar"}
@@ -190,7 +192,7 @@ export default function UserProfilePage() {
                   <AvatarFallback>{userProfile.name?.charAt(0) || "U"}</AvatarFallback>
                 </Avatar>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
-                  {userProfile.name || (isV0 ? mockAuth.user?.name : "Usuario")}
+                  {userProfile.name || (isV0 ? mockAuth.user?.name : session?.user?.name) || "Usuario"}
                 </h2>
                 <p className="text-gray-600 flex items-center gap-2 mb-4">
                   <Mail className="h-4 w-4" />
@@ -202,11 +204,17 @@ export default function UserProfilePage() {
                 </div>
 
                 <div className="mt-6 space-y-3 w-full max-w-sm">
-                  <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <Link href="/professional/dashboard" className="w-full block">
+                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/10">
+                      <RaizIcon className="h-4 w-4 mr-2 text-emerald-200" />
+                      Panel de Terapeuta (Sello Red-Raíz)
+                    </Button>
+                  </Link>
+                  <Button className="w-full bg-green-600 hover:bg-green-700 text-white">
                     <User className="h-4 w-4 mr-2" />
                     Editar Perfil
                   </Button>
-                  <Button variant="outline" className="w-full bg-transparent">
+                  <Button variant="outline" className="w-full bg-transparent border-gray-300 text-gray-700">
                     <Calendar className="h-4 w-4 mr-2" />
                     Mis Citas
                   </Button>

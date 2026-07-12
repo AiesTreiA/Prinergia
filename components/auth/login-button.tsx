@@ -13,6 +13,7 @@ import {
 import { User, Settings, LogOut, Calendar, MessageCircle } from "lucide-react"
 import { useSession, signOut } from "next-auth/react"
 import Link from "next/link"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 export function LoginButton() {
   const { data: session, status } = useSession()
@@ -42,11 +43,17 @@ export function LoginButton() {
         <DropdownMenuContent className="w-56" align="end" forceMount>
           <DropdownMenuLabel className="font-normal">
             <div className="flex flex-col space-y-1">
-              <p className="text-sm font-medium leading-none">{user.name || "Usuario de Prinergia"}</p>
+              <p className="text-sm font-medium leading-none">{user.name || "Usuario de Raíz·Red"}</p>
               <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/professional/dashboard">
+              <RaizIcon className="mr-2 h-4 w-4 text-emerald-500" />
+              <span>Panel de Terapeuta</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/profile">
               <User className="mr-2 h-4 w-4" />

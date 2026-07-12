@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Send, Paperclip, Smile, ArrowLeft, Leaf, Search } from "lucide-react"
+import { Send, Paperclip, Smile, ArrowLeft, Search } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 const conversations = [
   {
@@ -115,8 +116,8 @@ export default function MessagesPage() {
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-bold text-green-800">Prinergia</span>
+              <RaizIcon className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-800">Raíz·Red</span>
             </Link>
           </div>
           <LoginButton />

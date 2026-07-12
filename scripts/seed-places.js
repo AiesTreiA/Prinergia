@@ -104,7 +104,8 @@ async function seedPlaces() {
         rating: place.rating || 5.0,
         price: "$40.000 (Aprox)",
         avatar: "/placeholder.svg",
-        type: q.type
+        type: q.type,
+        consent_status: "pending_consent"
       };
 
       // Inserción en Supabase

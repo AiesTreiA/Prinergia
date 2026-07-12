@@ -7,12 +7,13 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Star, Filter, ArrowLeft, Leaf, Search } from "lucide-react"
+import { MapPin, Star, Filter, ArrowLeft, Search } from "lucide-react"
 import Link from "next/link"
 import MapboxMap from "./mapbox-map"
 import { LoginButton } from "@/components/auth/login-button"
 import { AddLocationModal } from "@/components/map/add-location-modal"
 import { createClient } from "@supabase/supabase-js"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ""
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ""
@@ -56,8 +57,8 @@ export default function MapPage() {
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-bold text-green-800">Prinergia</span>
+              <RaizIcon className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-800">Raíz·Red</span>
             </Link>
           </div>
           <LoginButton />
@@ -154,7 +155,14 @@ export default function MapPage() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-medium text-gray-800 truncate">{location.name}</h3>
+                            <h3 className="font-medium text-gray-800 truncate flex flex-wrap items-center gap-1.5">
+                              {location.name}
+                              {location.consent_status === "pending_consent" && (
+                                <Badge variant="outline" className="bg-yellow-50 border-yellow-200 text-yellow-700 text-[9px] py-0.5 px-1.5 font-normal tracking-wide shrink-0">
+                                  Esperando consentimiento
+                                </Badge>
+                              )}
+                            </h3>
                             <p className="text-sm text-green-600">{location.specialty}</p>
                           </div>
                           <div className="text-right flex-shrink-0">

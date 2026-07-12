@@ -13,6 +13,7 @@ interface MapLocation {
   price: string
   avatar: string
   type: string
+  consent_status?: string
 }
 
 interface MapboxMapProps {
@@ -96,15 +97,21 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
 
       // Base styles for the marker container
       const isSelected = selectedLocation === location.id
+      const isPending = location.consent_status === "pending_consent"
       const baseSize = isSelected ? 50 : 44
-      const borderColor = isSelected ? "#15803d" : "#16a34a"
+      
+      let borderColor = isSelected ? "#15803d" : "#16a34a"
+      if (isPending) {
+        borderColor = isSelected ? "#e2622c" : "#9ca3af" // amber if selected, gray if not
+      }
+      
       const borderWidth = isSelected ? 4 : 3
 
       markerElement.style.cssText = `
         width: ${baseSize}px;
         height: ${baseSize}px;
         border-radius: 50%;
-        border: ${borderWidth}px solid ${borderColor};
+        border: ${borderWidth}px ${isPending ? "dashed" : "solid"} ${borderColor};
         box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         cursor: pointer;
         transition: all 0.3s ease;
@@ -116,6 +123,7 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
         display: flex;
         align-items: center;
         justify-content: center;
+        opacity: ${isPending ? 0.7 : 1};
       `
 
       // Create image element
@@ -129,6 +137,7 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
         border-radius: 50%;
         transition: all 0.3s ease;
         pointer-events: none;
+        filter: ${isPending ? "grayscale(30%)" : "none"};
       `
 
       // Add type indicator overlay
@@ -182,8 +191,13 @@ export default function MapboxMap({ locations, selectedLocation, onLocationSelec
       markerElement.appendChild(typeIndicator)
 
       // Create popup content
+      const consentBanner = isPending
+        ? `<div style="background: #fef3c7; border: 1px solid #fde68a; color: #b45309; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: 600; text-align: center; margin-bottom: 8px;">Esperando consentimiento</div>`
+        : ""
+
       const popupContent = `
         <div class="p-4 max-w-xs">
+          ${consentBanner}
           <div class="flex items-center gap-3 mb-3">
             <img src="${location.avatar}" alt="${location.name}" class="w-12 h-12 rounded-full object-cover" />
             <div>

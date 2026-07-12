@@ -13,6 +13,9 @@ CREATE TABLE "public"."map_locations" (
   "lng" numeric NOT NULL,
   "avatar" text,
   "type" text NOT NULL, -- individual, group, center
+  "consent_status" text NOT NULL DEFAULT 'pending_consent', -- pending_consent, given
+  "contribution_level" integer DEFAULT 0, -- 0, 5, or 15 USD/month
+  "consent_date" timestamp with time zone,
   "created_by" uuid, -- El usuario que agregó este lugar al mapa
   "created_at" timestamp with time zone DEFAULT now(),
   PRIMARY KEY ("id"),

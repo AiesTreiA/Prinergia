@@ -3,7 +3,7 @@ import GoogleProvider from "next-auth/providers/google"
 import EmailProvider from "next-auth/providers/email"
 import { SupabaseAdapter } from "@auth/supabase-adapter"
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -19,6 +19,10 @@ export const authOptions: NextAuthOptions = {
         },
       },
       from: process.env.EMAIL_FROM,
+      async sendVerificationRequest({ identifier, url }) {
+        const { sendMagicLinkEmail } = await import("@/lib/email")
+        await sendMagicLinkEmail(identifier, url)
+      },
     }),
   ],
   adapter: SupabaseAdapter({

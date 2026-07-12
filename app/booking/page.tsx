@@ -9,9 +9,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Calendar, MapPin, CreditCard, ArrowLeft, Leaf, CheckCircle } from "lucide-react"
+import { Calendar, MapPin, CreditCard, ArrowLeft, CheckCircle } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 export default function BookingPage() {
   const [step, setStep] = useState(1)
@@ -37,8 +38,8 @@ export default function BookingPage() {
           <div className="flex items-center space-x-4">
             <Link href="/professional/1" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-bold text-green-800">Prinergia</span>
+              <RaizIcon className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-800">Raíz·Red</span>
             </Link>
           </div>
           <LoginButton />

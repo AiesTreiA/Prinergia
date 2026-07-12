@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Star, MapPin, Clock, Filter, Leaf, ArrowLeft } from "lucide-react"
+import { Star, MapPin, Clock, Filter, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { LoginButton } from "@/components/auth/login-button"
+import { RaizIcon } from "@/components/ui/raiz-icon"
 
 const professionals = [
   {
@@ -68,8 +69,8 @@ export default function SearchPage() {
           <div className="flex items-center space-x-4">
             <Link href="/" className="flex items-center space-x-2">
               <ArrowLeft className="h-5 w-5 text-gray-600" />
-              <Leaf className="h-6 w-6 text-green-600" />
-              <span className="text-xl font-bold text-green-800">Prinergia</span>
+              <RaizIcon className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-800">Raíz·Red</span>
             </Link>
           </div>
           <LoginButton />
