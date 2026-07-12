@@ -25,10 +25,12 @@ const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  adapter: SupabaseAdapter({
-    url: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    secret: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  }) as any,
+  adapter: (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    ? SupabaseAdapter({
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+        secret: process.env.SUPABASE_SERVICE_ROLE_KEY,
+      }) as any
+    : undefined,
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",

@@ -1,8 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 
-// Asegúrate de que estas variables de entorno estén configuradas en Vercel
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+const activeSupabaseUrl = supabaseUrl || "https://placeholder.supabase.co"
+const activeSupabaseAnonKey = supabaseAnonKey || "placeholder-key"
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.error(
@@ -17,7 +19,7 @@ function getSupabaseClient() {
   if (typeof window !== "undefined") {
     // Solo inicializar en el cliente
     if (!supabaseClient) {
-      supabaseClient = createClient(supabaseUrl!, supabaseAnonKey!)
+      supabaseClient = createClient(activeSupabaseUrl, activeSupabaseAnonKey)
     }
     return supabaseClient
   }
@@ -31,5 +33,5 @@ export const supabase = getSupabaseClient()
 
 // Función para usar en Server Components o Route Handlers si se necesita
 export function createServerSupabaseClient() {
-  return createClient(supabaseUrl!, supabaseAnonKey!)
+  return createClient(activeSupabaseUrl, activeSupabaseAnonKey)
 }
